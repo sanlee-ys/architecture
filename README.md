@@ -29,6 +29,7 @@ never ambiguous.
 | # | Title | Status |
 |---|-------|--------|
 | [SYS-001](decisions/SYS-001-record-architecture-decisions.md) | Record architecture decisions as two-tier ADRs | Accepted |
+| [SYS-002](decisions/SYS-002-model-tier-standard.md) | Build on the Anthropic API; default to Sonnet, escalate to Opus only where it pays | Accepted |
 
 ## Writing a new ADR
 
