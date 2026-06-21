@@ -2,7 +2,7 @@
 
 **Status:** Accepted
 **Date:** 2026-06-21
-**Deciders:** sanlee
+**Deciders:** San Lee
 
 ---
 

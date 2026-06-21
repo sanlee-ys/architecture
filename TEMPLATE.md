@@ -6,7 +6,7 @@
 
 **Status:** Proposed
 **Date:** YYYY-MM-DD
-**Deciders:** sanlee
+**Deciders:** San Lee
 
 ---
 
