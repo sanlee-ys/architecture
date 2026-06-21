@@ -38,9 +38,9 @@ a two-tier ADR habit buys you.
 |---|---|---|
 | Build on the Anthropic API; default to Sonnet, escalate to Opus only where an eval shows it pays | The classifier eval showed the accuracy ceiling was **label ambiguity, not model horsepower** — a bigger model would buy cost, not quality | `system/SYS-002` |
 | Adopt a **tool-layer contract** for `kb-agent`'s cross-system tools (one observation shape + an error-recovery contract + an eval acceptance gate) | Once an agent calls *other repos'* services, tool shape and failure behavior become a system concern, not per-function style. **Distilled and *critically adapted* from an external skill bundle (ECC, MIT) — took two ideas, rejected the rest**; chose JSON for grader-friendliness and calibrated the source's "wrap every response" down to lean payloads | `system/SYS-003` |
-| Make `notes-api` **event-driven** (vs. staying synchronous REST) | Motivates Kafka *authentically* — a consumer (the classifier) needs to react to note changes; forces real reasoning about async decoupling and delivery semantics | ADR pending (Phase 0) |
-| **Spring for Apache Kafka**, not Spring Cloud Stream | Already fluent in Kafka concepts from Python; the rust is Java/Spring syntax — so use the layer that maps concepts directly, not an abstraction that hides the mechanics | ADR pending (Phase 0) |
-| Extend `notes-api` in place; tag the REST baseline first | Most realistic, and ties into the system integration (`SYS-003`); tagging `v1-rest-baseline` preserves a clean REST reference to compare against | ADR pending |
+| Make `notes-api` **event-driven** (vs. staying synchronous REST) | Motivates Kafka *authentically* — a consumer (the classifier) needs to react to note changes; forces real reasoning about async decoupling and delivery semantics | `notes-api/ADR-001` |
+| **Spring for Apache Kafka**, not Spring Cloud Stream | Already fluent in Kafka concepts from Python; the rust is Java/Spring syntax — so use the layer that maps concepts directly, not an abstraction that hides the mechanics | `notes-api/ADR-001` (alternatives) |
+| Extend `notes-api` in place; tag the REST baseline first | Most realistic, and ties into the system integration (`SYS-003`); tagging `v1-rest-baseline` preserves a clean REST reference to compare against | `notes-api/ADR-001`; tag shipped |
 | **Close product + program gaps before deepening engineering** | Engineering credibility was already the strong half; the unmet gaps (program + product) are exactly what the target role screens for — do the harder, higher-leverage half first | [`program/README.md`](../program/README.md) |
 | Idempotent event consumer (handling at-least-once delivery) | _to be written in Phase 0 — see risk R1_ | ⬜ ADR pending |
 
@@ -51,6 +51,7 @@ a two-tier ADR habit buys you.
 | Systems & distributed design | Event-driven architecture, K8s, the dependency map |
 | AI fluency | Classification + eval harness, RAG + tool-use agent, model-tier reasoning (`SYS-002`), evals-as-CI |
 | Decision-making under tradeoffs | Two-tier ADRs + the decision log above |
+| Debugging & framework migration | Boot 4 gotchas navigated while wiring Kafka — starter-vs-raw-library autoconfig, Jackson 2→3 serializer (notes-api `docs/10`–`11`, `ADR-001`) |
 | Product framing | The [one-pager](../product/one-pager.md): user, problem, success metrics, non-goals |
 | Program management | The [program view](../program/README.md): workstreams, dependencies, risk register, roadmap |
 | Self-direction | Built solo, end to end |
@@ -68,7 +69,7 @@ Stated plainly, because naming them is more credible than hiding them — and th
 
 ## Status & what's next
 
-The product + program + narrative artifacts are in place. Next is **Phase 0** — making `notes-api`
-event-driven — and this decision log grows with each real choice the build forces (starting with the
-idempotency call, R1). A polished, public-facing version of this case study may later graduate to a
-portfolio site.
+The product + program + narrative artifacts are in place, and **Phase 0 is underway**: `notes-api`
+now publishes `NoteCreated` events (`notes-api/ADR-001`). Next is the classifier consumer and the
+idempotency call (R1). This decision log grows with each real choice the build forces; a polished,
+public-facing version of this case study may later graduate to a portfolio site.
