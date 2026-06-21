@@ -10,6 +10,18 @@ The projects this covers:
 - **[notes-api](https://github.com/sanlee-ys/notes-api)** — Spring Boot 4 REST API (Java).
 - **[learning-notes](https://github.com/sanlee-ys/learning-notes)** — plain-language notes on the concepts behind these projects.
 
+## Product context
+
+What this system is *for* — the primary user, the problem, success metrics, and scope — lives in
+the **[product one-pager](product/one-pager.md)**. The architecture decisions below are made in
+service of it.
+
+The **[program view](program/README.md)** holds the program-management layer — workstreams, a
+dependency map, a Now/Next/Later roadmap, and a risk register.
+
+The **[case study](case-study/README.md)** is the reflective companion — the decisions that shaped
+the system and what the project demonstrates.
+
 ## How decisions are organized
 
 Decisions are recorded as **ADRs** (Architecture Decision Records) at two tiers, both using
