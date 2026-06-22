@@ -15,7 +15,7 @@ here for now; split into `roadmap.md` / `risks.md` once it outgrows one page.
 | **Knowledge base** | Domain service (REST → event-driven) that stores and serves notes | `notes-api` |
 | **Classification** | LLM classifier with an eval harness | `defense-news-classifier` |
 | **Agent** | RAG + tool-use agent over the system (the hub) | `kb-agent` |
-| **Concepts** | Plain-language notes on the AI techniques behind the system | `learning-notes` |
+| **Concepts** | Plain-language notes on the AI techniques behind the system, with an [interactive concept map](https://sanlee-ys.github.io/learning-notes/concept-map.html) | [`learning-notes`](https://sanlee-ys.github.io/learning-notes/) |
 | **Cross-cutting** | ADRs, this program view, evals-as-CI, OTel observability | `architecture` (+ each repo) |
 
 ## Dependency map

@@ -40,10 +40,13 @@ distinct technique, demonstrated inside one coherent system rather than as scatt
 
 | Capability | AI technique | Repo |
 |---|---|---|
-| Categorize incoming news | LLM classification with an eval harness | `defense-news-classifier` |
-| Store & serve the knowledge base | Domain service (REST, becoming event-driven) | `notes-api` |
-| Answer questions over the KB | RAG + tool-use agent | `kb-agent` |
-| Keep quality from regressing | Evals-as-CI | cross-repo (see roadmap) |
+| Categorize incoming news | LLM classification with an [eval harness](https://sanlee-ys.github.io/learning-notes/02-eval-driven-development.html) | `defense-news-classifier` |
+| Store & serve the knowledge base | Domain service (REST, becoming [event-driven](https://sanlee-ys.github.io/learning-notes/18-event-driven-architecture.html)) | `notes-api` |
+| Answer questions over the KB | [RAG](https://sanlee-ys.github.io/learning-notes/06-rag-answering-from-your-own-docs.html) + [tool-use agent](https://sanlee-ys.github.io/learning-notes/05-the-agentic-tool-use-loop.html) | `kb-agent` |
+| Keep quality from regressing | [Evals-as-CI](https://sanlee-ys.github.io/learning-notes/02-eval-driven-development.html) | cross-repo (see roadmap) |
+
+> **New to these terms?** Each links to a plain-language note; the
+> [interactive concept map](https://sanlee-ys.github.io/learning-notes/concept-map.html) shows how they fit together.
 
 ## Success metrics
 
@@ -57,7 +60,7 @@ distinct technique, demonstrated inside one coherent system rather than as scatt
 
 **AI-quality (proves the system can be *measured*, not just demoed):**
 
-- **Classification quality** — per-field precision / recall / F1. Baseline from the existing
+- **Classification quality** — per-field [precision / recall / F1](https://sanlee-ys.github.io/learning-notes/03-reading-the-numbers.html). Baseline from the existing
   classifier eval: operational-domain **97.3%**; category **~79%**, with the ceiling set by
   *label ambiguity* (industry vs. procurement), not model horsepower — see `classifier/ADR-001`
   and `system/SYS-002`.

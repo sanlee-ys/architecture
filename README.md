@@ -8,7 +8,7 @@ The projects this covers:
 - **[kb-agent](https://github.com/sanlee-ys/kb-agent)** — RAG + tool-use agent over my projects (the hub).
 - **[defense-news-classifier](https://github.com/sanlee-ys/defense-news-classifier)** — LLM classifier with a real eval harness.
 - **[notes-api](https://github.com/sanlee-ys/notes-api)** — Spring Boot 4 REST API (Java).
-- **[learning-notes](https://github.com/sanlee-ys/learning-notes)** — plain-language notes on the concepts behind these projects.
+- **[learning-notes](https://github.com/sanlee-ys/learning-notes)** — plain-language notes on the concepts behind these projects, with an [interactive concept map](https://sanlee-ys.github.io/learning-notes/concept-map.html).
 
 ## Product context
 
@@ -21,6 +21,13 @@ dependency map, a Now/Next/Later roadmap, and a risk register.
 
 The **[case study](case-study/README.md)** is the reflective companion — the decisions that shaped
 the system and what the project demonstrates.
+
+**New here, or not deep in the tech?** The **[learning-notes](https://github.com/sanlee-ys/learning-notes)** are the
+plain-language companion to all of the above — what each term in these docs (RAG, tool-use, evals, event-driven
+messaging…) actually means, in five short sections per idea. Start with the
+**[interactive concept map](https://sanlee-ys.github.io/learning-notes/concept-map.html)** for a one-screen picture of
+how the pieces connect, or read the **[notes site](https://sanlee-ys.github.io/learning-notes/)** in order. The
+jargon-heavy docs link into the relevant note where a term first comes up.
 
 ## How decisions are organized
 
