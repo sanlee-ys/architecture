@@ -45,6 +45,7 @@ never ambiguous.
 | [SYS-001](decisions/SYS-001-record-architecture-decisions.md) | Record architecture decisions as two-tier ADRs | Accepted |
 | [SYS-002](decisions/SYS-002-model-tier-standard.md) | Build on the Anthropic API; default to Sonnet, escalate to Opus only where it pays | Accepted |
 | [SYS-003](decisions/SYS-003-agent-tool-layer-contract.md) | A contract for how kb-agent exposes and calls cross-system tools | Accepted |
+| [SYS-004](decisions/SYS-004-classify-http-contract.md) | Freeze the /classify HTTP contract between the classifier and kb-agent | Accepted |
 
 ## Writing a new ADR
 
