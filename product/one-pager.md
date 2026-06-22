@@ -60,7 +60,9 @@ distinct technique, demonstrated inside one coherent system rather than as scatt
 - **Classification quality** — per-field precision / recall / F1. Baseline from the existing
   classifier eval: operational-domain **97.3%**; category **~79%**, with the ceiling set by
   *label ambiguity* (industry vs. procurement), not model horsepower — see `classifier/ADR-001`
-  and `system/SYS-002`.
+  and `system/SYS-002`. *Update (v2): re-measured on real, human-labeled text, category is now
+  **88.9%** (macro-F1 0.906) and operational-domain **88.9%** (macro-F1 0.894) — the ceiling is
+  still label ambiguity, not model horsepower.*
 - **Retrieval quality (RAG)** — recall@k, answer groundedness, citation correctness.
 - **Agent task success** — pass rate on a fixed evaluation set.
 - **Regression gate** — an eval pass-rate threshold wired into CI; a change that drops below it

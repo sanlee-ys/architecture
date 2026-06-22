@@ -77,7 +77,9 @@ Stated plainly, because naming them is more credible than hiding them — and th
 - **Simulated program.** A solo project has no real cross-team coordination; the program layer is
   simulated, but the dependency, risk, and sequencing reasoning is real and transferable.
 - **A known quality ceiling.** Classifier category accuracy is ~79%, capped by label ambiguity —
-  documented and accepted (`system/SYS-002`), not papered over.
+  documented and accepted (`system/SYS-002`), not papered over. *Update (v2): re-measured on real,
+  human-labeled text, category is now 88.9% (macro-F1 0.906) and operational-domain 88.9% (macro-F1
+  0.894) — the ceiling is still label ambiguity, not model horsepower.*
 
 ## Status & what's next
 
