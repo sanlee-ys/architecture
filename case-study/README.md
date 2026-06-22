@@ -60,7 +60,7 @@ a two-tier ADR habit buys you.
 
 An outside yardstick now agrees with the judgment claims above: Anthropic's
 [2026 Agentic Coding Trends Report](https://resources.anthropic.com/2026-agentic-coding-trends-report)
-names, as industry trends, several practices this system had already adopted — the
+(gated; free sign-up) names, as industry trends, several practices this system had already adopted — the
 integrator/conductor pattern, the **"delegation gap"** encoded as human-review guardrails, and
 clean-room scope + a tool-layer contract. The full trend-by-trend mapping — including the places
 the system *deliberately* diverges (it skips long-running autonomy on purpose) — is in
