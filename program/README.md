@@ -42,8 +42,9 @@ graph TD
 
 The two load-bearing dependencies: **`kb-agent` can't be "one system" until `notes-api` and the
 classifier are callable as tools** — the contract for this is set (`system/SYS-003`, accepted) and
-the **classifier seam already works** (`classify_snippet` over HTTP); the `notes-api` seam is what's
-left. And **`notes-api` going event-driven pulls in Kafka + K8s and makes the classifier a
+the **classifier seam already works** (`classify_snippet` over HTTP, with its wire contract now
+frozen by `system/SYS-004` and enforced by contract tests on both sides); the `notes-api` seam is
+what's left. And **`notes-api` going event-driven pulls in Kafka + K8s and makes the classifier a
 consumer.** Everything else is cross-cutting.
 
 ## Roadmap — Now / Next / Later
@@ -51,8 +52,10 @@ consumer.** Everything else is cross-cutting.
 ### Now (in flight)
 - **[product]** Product one-pager — ✅ done · [`product/one-pager.md`](../product/one-pager.md)
 - **[program]** This program view — 🔄 in progress
-- **[kb-agent]** `SYS-003` tool-layer contract — ✅ accepted · [`decisions/SYS-003`](../decisions/SYS-003-agent-tool-layer-contract.md); the classifier seam (`classify_snippet`) is shipped and verified
-- **[cross-cutting]** Evals-as-CI — 🔄 starting with the `SYS-003` tool-layer eval gate (deterministic shape-grader already in `kb-agent/tests`); capability/regression evals + CI wiring next
+- **[kb-agent]** `SYS-003` tool-layer contract — ✅ accepted **and implemented** · [`decisions/SYS-003`](../decisions/SYS-003-agent-tool-layer-contract.md); all three tools return the observation shape via `_success`/`_problem`, an `_obs()` grader enforces it, and the classifier seam (`classify_snippet`) is shipped and verified
+- **[kb-agent]** `SYS-002` model tier — ✅ implemented · `kb-agent` defaults to `claude-sonnet-4-6` per [`decisions/SYS-002`](../decisions/SYS-002-model-tier-standard.md), with a `KB_AGENT_MODEL` env knob to escalate without code changes
+- **[cross-cutting]** `SYS-004` `/classify` wire contract — ✅ accepted · [`decisions/SYS-004`](../decisions/SYS-004-classify-http-contract.md); the classifier↔kb-agent HTTP seam is frozen and enforced by contract tests on both sides (see R6-adjacent drift risk, now mitigated)
+- **[cross-cutting]** Evals-as-CI — 🔄 the `SYS-003` tool-layer eval gate is in place (deterministic shape-grader in `kb-agent/tests`) and **CI now runs across all three code repos** (defense-news-classifier, kb-agent, notes-api); capability/regression evals next
 - **[product]** Capstone narrative stub — ⬜ last artifact of the gap-closing pass
 - **[notes-api]** Tag the REST baseline (`v1-rest-baseline`) before event-driven work begins
 
@@ -82,8 +85,9 @@ consumer.** Everything else is cross-cutting.
 | R3 | **Breadth creep** — adding verticals/techniques without depth, eroding the through-line | Medium | "Deep on one vehicle, articulate transfer"; other verticals are an explicit non-goal; this doc + the one-pager are the guardrail | `product/one-pager.md` (Non-goals) |
 | R4 | **Planning theater** — gap artifacts drift from delivery and become hollow docs | Medium | Keep artifacts thin and living; attach each to Phase 0; feed the capstone from real decisions only | this roadmap (Now/Next) |
 | R5 | **Simulated program** — a solo project has no real cross-team coordination, so program evidence is simulated | Low (honesty) | Treat repos as workstreams with tracked deps; be explicit in the capstone that it's simulated, but the reasoning and artifacts are real | capstone (pending) |
-| R6 | **RAG ships unmeasured** — `kb-agent` integration could go out with no quality eval | Medium | 🔄 In progress: `SYS-003` sets an eval acceptance gate and the deterministic shape-grader is in `kb-agent/tests`; next, add capability/regression evals + wire CI | Now → evals-as-CI |
+| R6 | **RAG ships unmeasured** — `kb-agent` integration could go out with no quality eval | Medium | 🔄 In progress: `SYS-003` sets an eval acceptance gate, the deterministic shape-grader is in `kb-agent/tests`, and **CI now runs across all three code repos**; next, add capability/regression evals | Now → evals-as-CI |
 | R7 | **Toolchain friction** — `JAVA_HOME` not set system-wide could stall notes-api builds | Low | Set per-shell or document the build command in the repo README | notes-api |
+| R8 | **Silent contract drift on the `/classify` seam** — classifier (provider) and `kb-agent` (consumer) are separate repos, so a renamed response field or changed enum could mis-read at runtime with nothing failing | Medium | ✅ Mitigated: `system/SYS-004` freezes the wire contract and ties a breaking-change → MAJOR-bump + coordinated-update rule to it; **contract tests on both sides** (in CI) turn any drift into a red build | `system/SYS-004` |
 
 ## On the "simulated program"
 

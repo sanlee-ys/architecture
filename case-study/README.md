@@ -37,7 +37,8 @@ a two-tier ADR habit buys you.
 | Decision | Why | Recorded in |
 |---|---|---|
 | Build on the Anthropic API; default to Sonnet, escalate to Opus only where an eval shows it pays | The classifier eval showed the accuracy ceiling was **label ambiguity, not model horsepower** — a bigger model would buy cost, not quality | `system/SYS-002` |
-| Adopt a **tool-layer contract** for `kb-agent`'s cross-system tools (one observation shape + an error-recovery contract + an eval acceptance gate) | Once an agent calls *other repos'* services, tool shape and failure behavior become a system concern, not per-function style. **Distilled and *critically adapted* from an external skill bundle (ECC, MIT) — took two ideas, rejected the rest**; chose JSON for grader-friendliness and calibrated the source's "wrap every response" down to lean payloads | `system/SYS-003` |
+| Adopt a **tool-layer contract** for `kb-agent`'s cross-system tools (one observation shape + an error-recovery contract + an eval acceptance gate) | Once an agent calls *other repos'* services, tool shape and failure behavior become a system concern, not per-function style. **Distilled and *critically adapted* from an external skill bundle (ECC, MIT) — took two ideas, rejected the rest**; chose JSON for grader-friendliness and calibrated the source's "wrap every response" down to lean payloads. Now **implemented**: every tool returns the shape via `_success`/`_problem`, an `_obs()` grader enforces it in CI | `system/SYS-003` |
+| **Freeze the `/classify` HTTP wire contract** between the classifier (provider) and `kb-agent` (consumer) — two-field response, pinned enums, 422/502 errors — with a breaking-change → MAJOR-bump + coordinated-update rule | Two repos on separate release cycles share a live HTTP seam; left implicit, a renamed field could mis-read at runtime with nothing failing. Freezing it + **contract tests on both sides** turns drift into a red build, and gives the roadmapped `v3.0.0` `region` field a gated path | `system/SYS-004` |
 | Make `notes-api` **event-driven** (vs. staying synchronous REST) | Motivates Kafka *authentically* — a consumer (the classifier) needs to react to note changes; forces real reasoning about async decoupling and delivery semantics | `notes-api/ADR-001` |
 | **Spring for Apache Kafka**, not Spring Cloud Stream | Already fluent in Kafka concepts from Python; the rust is Java/Spring syntax — so use the layer that maps concepts directly, not an abstraction that hides the mechanics | `notes-api/ADR-001` (alternatives) |
 | Extend `notes-api` in place; tag the REST baseline first | Most realistic, and ties into the system integration (`SYS-003`); tagging `v1-rest-baseline` preserves a clean REST reference to compare against | `notes-api/ADR-001`; tag shipped |
@@ -49,7 +50,7 @@ a two-tier ADR habit buys you.
 | Area | Evidence |
 |---|---|
 | Systems & distributed design | Event-driven architecture, K8s, the dependency map |
-| AI fluency | Classification + eval harness, RAG + tool-use agent, model-tier reasoning (`SYS-002`), evals-as-CI |
+| AI fluency | Classification + eval harness, RAG + tool-use agent, model-tier reasoning (`SYS-002`, now implemented in `kb-agent`), an implemented tool-layer observation contract (`SYS-003`) and a frozen cross-service `/classify` contract (`SYS-004`), evals-as-CI |
 | Decision-making under tradeoffs | Two-tier ADRs + the decision log above |
 | Debugging & framework migration | Boot 4 gotchas navigated while wiring Kafka — starter-vs-raw-library autoconfig, Jackson 2→3 serializer (notes-api `docs/10`–`11`, `ADR-001`) |
 | Product framing | The [one-pager](../product/one-pager.md): user, problem, success metrics, non-goals |
