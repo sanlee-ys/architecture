@@ -20,7 +20,9 @@ The **[program view](program/README.md)** holds the program-management layer —
 dependency map, a Now/Next/Later roadmap, and a risk register.
 
 The **[case study](case-study/README.md)** is the reflective companion — the decisions that shaped
-the system and what the project demonstrates.
+the system and what the project demonstrates. It also carries an **external-validation** check — a
+[trend-by-trend mapping](case-study/2026-agentic-coding-trends-mapping.md) of the system's practices
+against Anthropic's 2026 Agentic Coding Trends Report.
 
 ## How decisions are organized
 
