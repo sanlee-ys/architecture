@@ -5,7 +5,8 @@
 **Author:** San Lee
 
 Anthropic's [2026 Agentic Coding Trends Report](https://resources.anthropic.com/2026-agentic-coding-trends-report)
-names, as industry trends, a set of working practices this system had already adopted — most of
+(gated behind a free sign-up) names, as industry trends, a set of working practices this system had
+already adopted — most of
 them arrived at the hard way rather than from the report. This doc maps the report's eight trends
 to concrete artifacts in these repos, and is deliberately honest about the three places the system
 *doesn't* fit (two of them on purpose). Where the [case study](README.md) argues the system shows
@@ -70,9 +71,10 @@ unmeasured), **by design: no** (deliberately the other way).
 ## Source & provenance
 
 Primary source: Anthropic, [*2026 Agentic Coding Trends Report*](https://resources.anthropic.com/2026-agentic-coding-trends-report)
-([PDF](https://resources.anthropic.com/hubfs/2026%20Agentic%20Coding%20Trends%20Report.pdf)). The
-eight-trend taxonomy and the foundation/capability/impact grouping here are **synthesized** from the
-report and secondary summaries (Anthropic's hosted page blocked automated fetch at the time of
-writing), so treat the exact trend *names* as approximate; the concepts — orchestration era, the
-delegation gap, multi-agent teams, long-running agents, dual-use / security-first — are consistent
-across sources.
+([PDF](https://resources.anthropic.com/hubfs/2026%20Agentic%20Coding%20Trends%20Report.pdf)) —
+**gated behind a free email sign-up** (lead-gen) and not publicly mirrored. The eight-trend taxonomy
+and the foundation/capability/impact grouping here are **synthesized** from the report and secondary
+summaries (the gated page also blocked automated fetch at the time of writing), so treat the exact
+trend *names* as approximate; the concepts — orchestration era, the delegation gap, multi-agent
+teams, long-running agents, dual-use / security-first — are consistent across sources. This doc is
+written to stand on its own — the summary above is usable without signing up.
