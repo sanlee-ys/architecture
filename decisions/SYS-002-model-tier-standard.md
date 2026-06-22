@@ -20,6 +20,10 @@ too weak — the operational-domain field already hits 97.3% on the same model. 
 can't un-blur a fuzzy definition. So "always use the most capable model" would mostly buy
 cost, not quality.
 
+> **Update (v2):** Re-measured on real, human-labeled text, category accuracy is now 88.9%
+> (macro-F1 0.906) and operational-domain 88.9% (macro-F1 0.894) — and the ceiling is still
+> label ambiguity (industry vs. procurement), not model horsepower, so this decision holds.
+
 Current Anthropic lineup and pricing (per 1M tokens, input / output) at time of writing:
 
 | Tier | Model ID | Input | Output | vs. Sonnet |
