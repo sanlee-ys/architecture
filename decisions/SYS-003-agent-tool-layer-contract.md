@@ -1,6 +1,6 @@
 # SYS-003: A contract for how kb-agent exposes and calls cross-system tools
 
-**Status:** Accepted
+**Status:** Accepted — implemented in `kb-agent` (2026-06-22)
 **Date:** 2026-06-21
 **Deciders:** San Lee
 
@@ -42,8 +42,8 @@ formalizes its better instincts rather than replacing them:
 - **Success and empty paths carry no next step.** `search_kb`'s "No KB results for X"
   tells the model *what* happened but not *what to do* (broaden the query? drop the
   `kind` filter?). Recovery guidance exists only on the HTTP error paths.
-- **There is no eval gate.** `kb-agent` has "no test suite and no CI" (its `CLAUDE.md`);
-  the tool layer's reliability is currently asserted, not measured.
+- **No eval gate (at the time of writing).** When this ADR was written, `kb-agent` had
+  no test suite and no CI, so the tool layer's reliability was asserted, not measured.
 
 ## Decision
 
@@ -115,10 +115,11 @@ wired up.
   the `MAX_TOOL_ITERATIONS` cap on a dead service.
 - **Reliability becomes measurable**, and feeds directly into the evals-as-CI roadmap
   item — the same gate that grades the classifier now grades the agent's tool layer.
-- **It costs a refactor.** Today's tools return plain strings; adopting the observation
-  shape touches every tool in `tools.py` and the `tool_result` handling in `agent.py`.
-  The tradeoff is accepted: the change is small now (3 tools) and only gets more expensive
-  as the seam widens, so paying it before `notes-api` lands is the cheap moment.
+- **It cost a refactor — now paid.** Adopting the observation shape touched every tool in
+  `tools.py` and the `tool_result` handling in `agent.py`. The tradeoff was accepted and the
+  work has shipped: all three tools return the observation shape via `_success`/`_problem`,
+  an `_obs()` grader in `tests/test_tools.py` enforces it on every result, and CI runs the
+  suite — paid while the surface was still small (3 tools), before `notes-api` lands.
 - **Guard against eval theater** (the `eval-harness` anti-patterns): don't overfit tool
   descriptions to known eval prompts, don't grade only the happy path, and don't let a
   flaky LLM judge into the release gate — keep the deterministic graders as the spine.
