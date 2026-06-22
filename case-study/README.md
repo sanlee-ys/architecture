@@ -56,6 +56,17 @@ a two-tier ADR habit buys you.
 | Program management | The [program view](../program/README.md): workstreams, dependencies, risk register, roadmap |
 | Self-direction | Built solo, end to end |
 
+## External validation
+
+An outside yardstick now agrees with the judgment claims above: Anthropic's
+[2026 Agentic Coding Trends Report](https://resources.anthropic.com/2026-agentic-coding-trends-report)
+names, as industry trends, several practices this system had already adopted — the
+integrator/conductor pattern, the **"delegation gap"** encoded as human-review guardrails, and
+clean-room scope + a tool-layer contract. The full trend-by-trend mapping — including the places
+the system *deliberately* diverges (it skips long-running autonomy on purpose) — is in
+[`2026-agentic-coding-trends-mapping.md`](2026-agentic-coding-trends-mapping.md). Convergent, not
+copied: the multi-session playbook it draws on was written after a real collision, not from the report.
+
 ## Honest limitations
 
 Stated plainly, because naming them is more credible than hiding them — and the reasoning still holds:
