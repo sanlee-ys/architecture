@@ -83,14 +83,15 @@ gated by SYS-004 (the response field) and by this ADR (the tag).
   creation. The writeback uses the **event's tags snapshot**, so a user edit to tags made
   between create and processing could be momentarily overwritten by the merge — accepted at
   this scale (the fat event exists precisely so the consumer need not call back).
-- **What we'll revisit.** The **consumer side** now has a live-broker integration test
-  (`defense-news-classifier/tests/test_consumer_integration.py`, Testcontainers Kafka): it
-  publishes a `NoteCreated` the way notes-api does and drives the real consume → deserialize
-  → process path, proving the wire contract survives an actual broker. The **producer side**
-  is the remaining half — notes-api has no Testcontainers-Kafka test yet asserting that
-  `POST /notes` actually lands a `NoteCreated` on the topic. That is the residual drift risk
-  on this seam (the async cousin of R8), to close with a producer-side integration test (and,
-  deeper, a full `run()`-in-a-thread end-to-end against a stub notes-api).
+- **What we'll revisit.** Both sides now carry a live-broker integration test, each verified
+  green in CI against a real Dockerized Kafka broker (Testcontainers): the **consumer side**
+  (`defense-news-classifier/tests/test_consumer_integration.py`) publishes a `NoteCreated` and
+  drives the real consume → deserialize → process path, and the **producer side**
+  (`notes-api/.../NoteEventPublishingIT.java`, run in `./mvnw verify`) asserts that creating a
+  note lands a real `NoteCreated` on the topic with the frozen wire shape. The drift risk the
+  async cousin of R8 named is now closed on both halves. The only deeper layer left is a single
+  full end-to-end test driving the consumer's `run()` loop against a real broker *and* a stub
+  notes-api, asserting offsets commit only after a successful writeback.
 
 ## Alternatives Considered
 

@@ -72,9 +72,11 @@ Everything else is cross-cutting.
   test (`defense-news-classifier/tests/test_consumer_integration.py`) publishes a `NoteCreated` and
   drives the consumer's real consume → process path against a live broker, proving the wire contract.
   Opt-in (`--run-integration`), so the fast unit lane stays Docker-free. (Producer-side IT below.)
-- **[notes-api]** **Event-seam integration test (producer side)** — ⬜ no Testcontainers-Kafka test yet
-  asserting `POST /notes` actually lands a `NoteCreated` on the topic. The remaining half of the
-  `system/SYS-005` live-broker residual.
+- **[notes-api]** **Event-seam integration test (producer side)** — ✅ done · a Testcontainers-Kafka
+  test (`notes-api/.../NoteEventPublishingIT.java`, run in `./mvnw verify`) boots the app against a
+  real broker and asserts creating a note lands a real `NoteCreated` on the topic — CI-green. With
+  the consumer-side IT above, the `system/SYS-005` live-broker residual is **closed on both halves**;
+  only a single full `run()`-loop end-to-end remains as a deeper layer.
 - **[program]** Start the **weekly status cadence**, harvested from real progress.
 
 ### Later
