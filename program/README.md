@@ -1,7 +1,7 @@
 # Program View — Defense-News Intelligence
 
 **Status:** Living
-**Date:** 2026-06-21
+**Date:** 2026-06-23
 **Author:** San Lee
 
 The program-management companion to the [product one-pager](../product/one-pager.md): the
@@ -44,8 +44,10 @@ The two load-bearing dependencies: **`kb-agent` can't be "one system" until `not
 classifier are callable as tools** — the contract for this is set (`system/SYS-003`, accepted) and
 the **classifier seam already works** (`classify_snippet` over HTTP, with its wire contract now
 frozen by `system/SYS-004` and enforced by contract tests on both sides); the `notes-api` seam is
-what's left. And **`notes-api` going event-driven pulls in Kafka + K8s and makes the classifier a
-consumer.** Everything else is cross-cutting.
+what's left. And **the event loop is now closed** — `notes-api` publishes `NoteCreated` and the
+classifier consumes `note-events`, classifies each note, and writes labels back as tags
+(`system/SYS-005`); scaling that off the local broker onto Kafka + K8s is the remaining infra step.
+Everything else is cross-cutting.
 
 ## Roadmap — Now / Next / Later
 
@@ -60,11 +62,16 @@ consumer.** Everything else is cross-cutting.
 - **[notes-api]** Tag the REST baseline (`v1-rest-baseline`) before event-driven work begins
 
 ### Next (right after the gap pass)
-- **[notes-api]** **Phase 0 — make notes-api event-driven:** local Kafka (KRaft) + kafka-ui smoke
-  test → publish `NoteCreated` → classifier as a `@KafkaListener` consumer → close the loop with an
-  **idempotent** tags writeback → ADR + baseline.
-- **[classifier]** Kafka consumer for the event loop. (The HTTP `/classify` service for `kb-agent`
-  tool-use is ✅ done — `kb-agent` already calls it via `classify_snippet`.)
+- **[notes-api + classifier]** **Phase 0 event loop — ✅ closed.** local Kafka (KRaft) + kafka-ui →
+  `notes-api` publishes `NoteCreated` → the classifier consumes `note-events` (a `kafka-python`
+  consumer in `src/consumer.py`, *not* a `@KafkaListener` — the classifier is Python), classifies
+  each note, and writes labels back as **namespaced** tags via an **idempotent** `PUT /notes/{id}/tags`.
+  Contract frozen in [`system/SYS-005`](../decisions/SYS-005-event-loop-contract.md); closes R1;
+  `v1-rest-baseline` tagged before the work began.
+- **[classifier]** **Event-seam integration test** — ⬜ the consumer logic and the writeback endpoint
+  are unit-tested on both sides, but nothing yet exercises a real `note-events` round trip (the async
+  cousin of SYS-004's both-sides contract tests). Add a Testcontainers-Kafka test (`system/SYS-005`
+  residual risk).
 - **[program]** Start the **weekly status cadence**, harvested from real progress.
 
 ### Later
@@ -80,7 +87,7 @@ consumer.** Everything else is cross-cutting.
 
 | # | Risk | Severity | Mitigation / next action | Tracked in |
 |---|------|----------|--------------------------|------------|
-| R1 | **Duplicate event processing** — at-least-once delivery means the consumer may see a `NoteCreated` twice, double-classifying / double-writing tags | High | Idempotent consumer: dedupe by event key/offset, **upsert** tags (not append). Decide & record as an ADR in Phase 0 | notes-api → ADR (pending) |
+| R1 | **Duplicate event processing** — at-least-once delivery means the consumer may see a `NoteCreated` twice, double-classifying / double-writing tags | Low | ✅ Mitigated: the consumer writes **namespaced** labels via an idempotent replace (`PUT /notes/{id}/tags`), commits the offset only after classify + writeback succeed, and skips poison messages — so redelivery converges instead of accumulating. Frozen in `system/SYS-005`; consumer-idempotency unit tests enforce it | `system/SYS-005`, `notes-api/ADR-001` |
 | R2 | **Classifier accuracy ceiling** — category accuracy ~79%, capped by label ambiguity (industry vs. procurement), not model horsepower (*update (v2): re-measured on real, human-labeled text, category is now 88.9% / macro-F1 0.906 and operational-domain 88.9% / macro-F1 0.894 — ceiling is still label ambiguity, not the model*) | Medium | Don't escalate the model (per `system/SYS-002`); refine taxonomy or use an LLM judge on boundary cases; set the expectation in product metrics | `classifier/ADR-001`, `system/SYS-002` |
 | R3 | **Breadth creep** — adding verticals/techniques without depth, eroding the through-line | Medium | "Deep on one vehicle, articulate transfer"; other verticals are an explicit non-goal; this doc + the one-pager are the guardrail | `product/one-pager.md` (Non-goals) |
 | R4 | **Planning theater** — gap artifacts drift from delivery and become hollow docs | Medium | Keep artifacts thin and living; attach each to Phase 0; feed the capstone from real decisions only | this roadmap (Now/Next) |
