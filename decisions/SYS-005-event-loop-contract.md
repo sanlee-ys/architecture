@@ -89,9 +89,10 @@ gated by SYS-004 (the response field) and by this ADR (the tag).
   drives the real consume → deserialize → process path, and the **producer side**
   (`notes-api/.../NoteEventPublishingIT.java`, run in `./mvnw verify`) asserts that creating a
   note lands a real `NoteCreated` on the topic with the frozen wire shape. The drift risk the
-  async cousin of R8 named is now closed on both halves. The only deeper layer left is a single
-  full end-to-end test driving the consumer's `run()` loop against a real broker *and* a stub
-  notes-api, asserting offsets commit only after a successful writeback.
+  async cousin of R8 named is now closed on both halves. The deeper end-to-end layer is also done:
+  `test_run_loop_commits_only_after_writeback` drives the consumer's real `run()` loop against a
+  live broker *and* a stub notes-api, asserting the offset commits only after a successful
+  writeback — so this seam is now fully discharged at every level.
 
 ## Alternatives Considered
 

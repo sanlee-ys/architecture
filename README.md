@@ -47,6 +47,7 @@ never ambiguous.
 | [SYS-003](decisions/SYS-003-agent-tool-layer-contract.md) | A contract for how kb-agent exposes and calls cross-system tools | Accepted |
 | [SYS-004](decisions/SYS-004-classify-http-contract.md) | Freeze the /classify HTTP contract between the classifier and kb-agent | Accepted |
 | [SYS-005](decisions/SYS-005-event-loop-contract.md) | Close the note-events loop — freeze the consume + tags-writeback contract | Accepted |
+| [SYS-006](decisions/SYS-006-notes-read-contract.md) | Freeze the GET /notes read contract between kb-agent and notes-api | Accepted |
 
 ## Writing a new ADR
 

@@ -42,9 +42,9 @@ graph TD
 
 The two load-bearing dependencies: **`kb-agent` can't be "one system" until `notes-api` and the
 classifier are callable as tools** — the contract for this is set (`system/SYS-003`, accepted) and
-the **classifier seam already works** (`classify_snippet` over HTTP, with its wire contract now
-frozen by `system/SYS-004` and enforced by contract tests on both sides); the `notes-api` seam is
-what's left. And **the event loop is now closed** — `notes-api` publishes `NoteCreated` and the
+**both tool seams now work** (`classify_snippet` → classifier over HTTP, frozen by `system/SYS-004`;
+and `search_notes` → notes-api over HTTP, frozen by `system/SYS-006`), each enforced by contract
+tests on both sides. And **the event loop is now closed** — `notes-api` publishes `NoteCreated` and the
 classifier consumes `note-events`, classifies each note, and writes labels back as tags
 (`system/SYS-005`); scaling that off the local broker onto Kafka + K8s is the remaining infra step.
 Everything else is cross-cutting.
@@ -75,15 +75,20 @@ Everything else is cross-cutting.
 - **[notes-api]** **Event-seam integration test (producer side)** — ✅ done · a Testcontainers-Kafka
   test (`notes-api/.../NoteEventPublishingIT.java`, run in `./mvnw verify`) boots the app against a
   real broker and asserts creating a note lands a real `NoteCreated` on the topic — CI-green. With
-  the consumer-side IT above, the `system/SYS-005` live-broker residual is **closed on both halves**;
-  only a single full `run()`-loop end-to-end remains as a deeper layer.
+  the consumer-side IT above, the `system/SYS-005` live-broker residual is **closed on both halves**.
+  The deeper `run()`-loop end-to-end (the consumer loop against a real broker + a stub notes-api,
+  asserting the offset commits only after a successful writeback) is now done too
+  (`test_run_loop_commits_only_after_writeback`) — so SYS-005 is fully discharged.
 - **[program]** Start the **weekly status cadence**, harvested from real progress.
 
 ### Later
 - **[notes-api]** Phase 1 — containerize + local K8s; Phase 2 — Kafka on K8s via Strimzi
   (StatefulSets, operator pattern).
-- **[kb-agent]** Add a `notes-api` tool — the remaining `SYS-003` seam (the contract and the
-  classifier seam are done), so the agent reads the knowledge base through its own service.
+- **[kb-agent]** Add a `notes-api` tool — ✅ done · `search_notes` GETs notes-api's `/notes` over
+  HTTP (returning the `SYS-003` observation shape), so the agent reads the knowledge base through the
+  service that owns it, not a static stub. Read contract frozen in
+  [`system/SYS-006`](../decisions/SYS-006-notes-read-contract.md), tested on both sides — the **last
+  unbuilt edge in the dependency map is now wired**.
 - **[cross-cutting]** OTel observability across `notes-api` + `kb-agent`.
 - **[ops]** Operational-maturity track — Linux, ssh, health checks ("can I operate what I built?").
 - **[non-goal]** Other verticals (banking, etc.) — **articulated, not built**.
