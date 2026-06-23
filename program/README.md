@@ -68,10 +68,13 @@ Everything else is cross-cutting.
   each note, and writes labels back as **namespaced** tags via an **idempotent** `PUT /notes/{id}/tags`.
   Contract frozen in [`system/SYS-005`](../decisions/SYS-005-event-loop-contract.md); closes R1;
   `v1-rest-baseline` tagged before the work began.
-- **[classifier]** **Event-seam integration test** — ⬜ the consumer logic and the writeback endpoint
-  are unit-tested on both sides, but nothing yet exercises a real `note-events` round trip (the async
-  cousin of SYS-004's both-sides contract tests). Add a Testcontainers-Kafka test (`system/SYS-005`
-  residual risk).
+- **[classifier]** **Event-seam integration test (consumer side)** — ✅ done · a Testcontainers-Kafka
+  test (`defense-news-classifier/tests/test_consumer_integration.py`) publishes a `NoteCreated` and
+  drives the consumer's real consume → process path against a live broker, proving the wire contract.
+  Opt-in (`--run-integration`), so the fast unit lane stays Docker-free. (Producer-side IT below.)
+- **[notes-api]** **Event-seam integration test (producer side)** — ⬜ no Testcontainers-Kafka test yet
+  asserting `POST /notes` actually lands a `NoteCreated` on the topic. The remaining half of the
+  `system/SYS-005` live-broker residual.
 - **[program]** Start the **weekly status cadence**, harvested from real progress.
 
 ### Later

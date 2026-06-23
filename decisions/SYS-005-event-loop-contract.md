@@ -83,12 +83,14 @@ gated by SYS-004 (the response field) and by this ADR (the tag).
   creation. The writeback uses the **event's tags snapshot**, so a user edit to tags made
   between create and processing could be momentarily overwritten by the merge — accepted at
   this scale (the fat event exists precisely so the consumer need not call back).
-- **What we'll revisit.** The async seam is **not yet covered by a live-broker contract
-  test** the way SYS-004's HTTP seam is on both sides — the consumer logic is unit-tested
-  (idempotency, tag encoding, poison/transient handling) and the writeback endpoint is
-  unit-tested, but nothing exercises a real `note-events` round trip in CI. That is the
-  residual drift risk on this seam (the async cousin of R8), to close with an integration
-  test (e.g. Testcontainers Kafka) when the loop graduates past local.
+- **What we'll revisit.** The **consumer side** now has a live-broker integration test
+  (`defense-news-classifier/tests/test_consumer_integration.py`, Testcontainers Kafka): it
+  publishes a `NoteCreated` the way notes-api does and drives the real consume → deserialize
+  → process path, proving the wire contract survives an actual broker. The **producer side**
+  is the remaining half — notes-api has no Testcontainers-Kafka test yet asserting that
+  `POST /notes` actually lands a `NoteCreated` on the topic. That is the residual drift risk
+  on this seam (the async cousin of R8), to close with a producer-side integration test (and,
+  deeper, a full `run()`-in-a-thread end-to-end against a stub notes-api).
 
 ## Alternatives Considered
 
