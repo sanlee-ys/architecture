@@ -19,6 +19,9 @@ service of it.
 The **[program view](program/README.md)** holds the program-management layer — workstreams, a
 dependency map, a Now/Next/Later roadmap, and a risk register.
 
+The **[engineering view](engineering/README.md)** is the technical-craft companion — the AI-skill
+substrate (`SYS-007`), the cross-repo engineering standards, and a reading map of where the depth lives.
+
 The **[case study](case-study/README.md)** is the reflective companion — the decisions that shaped
 the system and what the project demonstrates. It also carries an **external-validation** check — a
 [trend-by-trend mapping](case-study/2026-agentic-coding-trends-mapping.md) of the system's practices
@@ -48,6 +51,8 @@ never ambiguous.
 | [SYS-004](decisions/SYS-004-classify-http-contract.md) | Freeze the /classify HTTP contract between the classifier and kb-agent | Accepted |
 | [SYS-005](decisions/SYS-005-event-loop-contract.md) | Close the note-events loop — freeze the consume + tags-writeback contract | Accepted |
 | [SYS-006](decisions/SYS-006-notes-read-contract.md) | Freeze the GET /notes read contract between kb-agent and notes-api | Accepted |
+| [SYS-007](decisions/SYS-007-engineering-substrate-and-ai-skills.md) | Engineering is the substrate of the product & program tracks; an AI-skill map across all three | Accepted |
+| [SYS-008](decisions/SYS-008-documentation-portal.md) | A generated documentation portal — one browsable view over the whole system | Accepted |
 
 ## Writing a new ADR
 

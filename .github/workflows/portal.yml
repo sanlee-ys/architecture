@@ -1,0 +1,71 @@
+# Build the system portal (SYS-008) and deploy it to GitHub Pages.
+#
+# The portal aggregates docs from several public sibling repos, so the build clones
+# them next to this one and runs scripts/build_portal.py — the SAME assembler used
+# locally. It therefore reflects whatever is on each repo's `main`: anything not yet
+# committed and pushed will not appear in the published site.
+name: Build & deploy portal
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Least privilege the Pages deploy needs.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Never run two deploys at once; let the newest win.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out architecture (this repo)
+        uses: actions/checkout@v4
+        with:
+          path: architecture
+
+      # Public repos — a shallow anonymous clone avoids any cross-repo token setup.
+      # They land beside architecture/, which is exactly the layout build_portal.py
+      # expects (it reads sibling repos from the parent directory).
+      - name: Clone sibling repos
+        run: |
+          for r in kb-agent notes-api defense-news-classifier; do
+            git clone --depth 1 "https://github.com/sanlee-ys/$r.git" "$r"
+          done
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install MkDocs Material
+        run: pip install mkdocs-material
+
+      - name: Assemble the portal docs tree
+        run: python architecture/scripts/build_portal.py
+
+      - name: Build the static site
+        run: mkdocs build -f architecture/mkdocs.yml
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: architecture/site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
