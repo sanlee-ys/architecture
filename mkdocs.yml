@@ -17,8 +17,9 @@ docs_dir: portal
 site_dir: site
 use_directory_urls: false   # flat .html so the built site also opens offline via file://
 site_url: https://sanlee-ys.github.io/architecture/
-repo_url: https://github.com/sanlee-ys/architecture
-repo_name: sanlee-ys/architecture
+# No repo_url/repo_name: Material's header repo link triggers api.github.com calls
+# for star/release stats, which break the zero-external-request / offline goal.
+# GitHub links live in the home-page "Repos at a glance" table instead.
 
 theme:
   name: material
