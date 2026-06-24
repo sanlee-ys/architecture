@@ -16,14 +16,21 @@ site_description: One place to read the whole system — decisions, docs, and a 
 docs_dir: portal
 site_dir: site
 use_directory_urls: false   # flat .html so the built site also opens offline via file://
+site_url: https://sanlee-ys.github.io/architecture/
+repo_url: https://github.com/sanlee-ys/architecture
+repo_name: sanlee-ys/architecture
 
 theme:
   name: material
+  font: false   # no Google Fonts fetch; use the OS system-font stack (offline/intranet-safe)
   features:
+    - navigation.tabs
+    - navigation.tabs.sticky
     - navigation.top
     - navigation.tracking
     - navigation.sections
     - navigation.indexes
+    - navigation.footer
     - content.code.copy
     - search.highlight
     - search.suggest
@@ -46,10 +53,21 @@ markdown_extensions:
   - toc:
       permalink: true
   - pymdownx.highlight
-  - pymdownx.superfences
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid-src   # NOT "mermaid": keeps Material's flaky auto-renderer out; we render these ourselves
+          format: !!python/name:pymdownx.superfences.fence_code_format
 
 plugins:
   - search
+
+# Self-hosted mermaid 11.15.0 (UMD). Defining window.mermaid makes Material's
+# integration reuse it instead of fetching https://unpkg.com/mermaid@11 — so the
+# diagram renders with zero internet (matches use_directory_urls:false / offline-first).
+extra_javascript:
+  - javascripts/vendor/mermaid.min.js
+  - javascripts/mermaid-render.js
 
 nav:
   - Home: index.md

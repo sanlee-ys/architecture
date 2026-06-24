@@ -1,7 +1,18 @@
 # Projects — System Portal
 
-One place to read the whole system and jump straight to the code. The interactive
-**system map** lands here next (`SYS-008`, Phase 2); for now, the launchpad below.
+One place to read the whole system and jump straight to the code. Here's the shape of it —
+a first static cut of the **system map** (the interactive version is `SYS-008`, Phase 2):
+
+```mermaid
+graph TD
+  KB["kb-agent<br/>RAG + tool-use"] -->|"classify_snippet → /classify"| DNC["defense-news-classifier"]
+  KB -->|"search_notes → GET /notes"| API["notes-api<br/>Spring Boot"]
+  API -->|"note-events (Kafka)"| DNC
+  DNC -->|"idempotent tags writeback"| API
+  ARCH["architecture<br/>ADRs + this portal"] -.->|"governs"| KB
+  ARCH -.->|"governs"| API
+  ARCH -.->|"governs"| DNC
+```
 
 !!! note "How this stays honest"
     Everything below is **generated** from the source repos — read it here, but edit it
