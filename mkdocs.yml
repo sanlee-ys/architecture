@@ -1,0 +1,71 @@
+# Portal — the single browsable view over the whole system (SYS-008).
+#
+# The docs tree under `portal/` is GENERATED. Never edit it by hand — it is assembled
+# from the source repos by scripts/build_portal.py. Edit the real source in each repo
+# (or `portal_src/` for portal-only chrome), then re-run the script.
+#
+# Assemble the docs, then live-preview (run from THIS folder):
+#   uv run --no-project python scripts/build_portal.py
+#   uv run --no-project --with mkdocs-material mkdocs serve
+#
+# One-shot static build into ./site:
+#   uv run --no-project python scripts/build_portal.py
+#   uv run --no-project --with mkdocs-material mkdocs build
+site_name: Projects — System Portal
+site_description: One place to read the whole system — decisions, docs, and a jump to the code.
+docs_dir: portal
+site_dir: site
+use_directory_urls: false   # flat .html so the built site also opens offline via file://
+
+theme:
+  name: material
+  features:
+    - navigation.top
+    - navigation.tracking
+    - navigation.sections
+    - navigation.indexes
+    - content.code.copy
+    - search.highlight
+    - search.suggest
+  palette:
+    - scheme: default
+      primary: blue grey
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
+    - scheme: slate
+      primary: blue grey
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to light mode
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - toc:
+      permalink: true
+  - pymdownx.highlight
+  - pymdownx.superfences
+
+plugins:
+  - search
+
+nav:
+  - Home: index.md
+  - System:
+      - Product: product/one-pager.md
+      - Program: program/README.md
+      - Engineering: engineering/README.md
+      - Case study: case-study/README.md
+      - Vocabulary: reference/product-and-program-vocabulary.md
+  # The decision wall (decisions/index.md) is generated with every ADR by build_portal.py,
+  # so the nav points at it instead of hard-coding each SYS-NNN — that hard-coding is exactly
+  # what collided across machines. New ADRs show up on the wall automatically.
+  - Decisions: decisions/index.md
+  - Apps:
+      - apps/index.md
+      - kb-agent: apps/kb-agent/index.md
+      - notes-api: apps/notes-api/index.md
+      - defense-news-classifier: apps/defense-news-classifier/index.md
+  - Telemetry: telemetry.md

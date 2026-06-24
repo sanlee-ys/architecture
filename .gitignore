@@ -2,3 +2,8 @@
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# Portal (SYS-008) — both are generated; never commit them.
+# `portal/` is assembled by scripts/build_portal.py; `site/` is the MkDocs build output.
+portal/
+site/
