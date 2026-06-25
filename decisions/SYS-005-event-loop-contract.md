@@ -93,6 +93,17 @@ gated by SYS-004 (the response field) and by this ADR (the tag).
   `test_run_loop_commits_only_after_writeback` drives the consumer's real `run()` loop against a
   live broker *and* a stub notes-api, asserting the offset commits only after a successful
   writeback — so this seam is now fully discharged at every level.
+- **The writeback's next form.** Idempotency and the namespace-merge are currently the
+  **caller's** job: the consumer merges against the event's tags snapshot and `PUT`s the full
+  set, which is exactly what opens the lost-update window named under *What it costs*. The
+  upgrade path is a dedicated, classification-scoped **`PATCH /notes/{id}/classification`** that
+  carries the two typed labels and does the strip-stale-then-upsert *inside notes-api*, against
+  the note's **current** tags — so idempotency becomes a property of the **contract** rather than
+  the caller, the snapshot lost-update window closes, and a second writeback consumer inherits the
+  guarantee instead of re-implementing the merge. Deferred for v0 (the generic `PUT /tags` keeps
+  notes-api a generic notes service and the consumer-side merge already closes the loop); because
+  it changes the writeback endpoint's shape it is a breaking change under the *Versioning rule*
+  above — a coordinated change across both repos plus a superseding `SYS-NNN`.
 
 ## Alternatives Considered
 
