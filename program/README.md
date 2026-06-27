@@ -31,8 +31,8 @@ graph TD
 
   kb -->|tool call| notes
   kb -->|tool call| clf
-  notes -->|BackgroundTask classify+writeback| clf
-  clf -->|tags writeback| notes
+  notes -->|BackgroundTask → /classify| clf
+  notes -->|writes labels back as tags| notes
   notes --> infra
   clf -.->|eval harness| evals
   kb -.->|RAG eval| evals

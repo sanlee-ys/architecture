@@ -22,8 +22,10 @@ at runtime. This ADR freezes the read shape and ties the versioning rule to it.
 
 **Source of truth (read *from* the code, not invented here):**
 
-- Provider — notes-api `routers/notes.py` (`get_all`, `GET /notes` with optional `?q=`
-  and `?tag=`) and the `NoteResponse` schema in `schemas.py` (the response model).
+- Provider — notes-api `src/notes_api/router.py` (`list_notes`, `GET /notes` with optional
+  `?q=` and `?tag=`) delegating to `src/notes_api/service.py` (`NoteService.get_all`, which
+  runs the case-insensitive title/content search and tag filter), and the `NoteResponse`
+  schema in `src/notes_api/schemas.py` (the response model).
 - Consumer — `kb-agent` `agent/tools.py` (`search_notes`, which GETs `{base}/notes`
   with `q`/`tag` params and reads `id`/`title`/`content`/`tags` out of each element).
 
@@ -100,8 +102,9 @@ observation.
 
 ---
 
-*Source of truth: provider — notes-api `routers/notes.py` (`get_all`) and
-`schemas.py` (`NoteResponse`); consumer — kb-agent `agent/tools.py` (`search_notes`). Siblings:
+*Source of truth: provider — notes-api `src/notes_api/router.py` (`list_notes`) →
+`src/notes_api/service.py` (`NoteService.get_all`) and `src/notes_api/schemas.py`
+(`NoteResponse`); consumer — kb-agent `agent/tools.py` (`search_notes`). Siblings:
 [SYS-004](SYS-004-classify-http-contract.md) (the synchronous classify seam, same
 versioning discipline), [SYS-003](SYS-003-agent-tool-layer-contract.md) (the observation
 envelope `search_notes` returns), [SYS-005](SYS-005-event-loop-contract.md) (the async

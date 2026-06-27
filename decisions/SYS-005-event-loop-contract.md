@@ -1,4 +1,4 @@
-# SYS-005: Close the note-events loop — freeze the classify-and-writeback contract
+# SYS-005: Close the classify-and-writeback loop — freeze the contract
 
 **Status:** Accepted (updated 2026-06-27 — Kafka replaced by FastAPI BackgroundTasks)
 **Date:** 2026-06-23
@@ -33,8 +33,9 @@ freeze the contract below. Both repos are bound to it; neither may change it uni
 (see *Versioning rule*).
 
 **Trigger.** Immediately after `POST /notes` returns `201 Created`, `notes-api` enqueues a
-`BackgroundTask` (`classify_and_writeback(note_id, content)`). The HTTP response to the
-caller is not delayed — the task runs after the response is sent.
+`BackgroundTask` (`classify_and_writeback(note_id, text)`, where `text` is the note's
+title + content). The HTTP response to the caller is not delayed — the task runs after the
+response is sent.
 
 **Classification call.** The background task POSTs to the classifier's `/classify` endpoint:
 
@@ -110,11 +111,14 @@ response field) and by this ADR (the tag).
 
 ---
 
-*Source of truth: trigger — notes-api `routers/notes.py` (`create_note`, `POST /notes`);
-background task — notes-api `tasks.py` (`classify_and_writeback`); writeback endpoint —
-notes-api `routers/notes.py` (`update_tags`, `PUT /notes/{id}/tags`), schemas in
-`schemas.py` (`TagsRequest`); classifier endpoint — `defense-news-classifier` `src/serve.py`
-(`/classify`); label enums — classifier `src/classify.py` (`CATEGORIES`, `DOMAINS`).
+*Source of truth: trigger — notes-api `src/notes_api/router.py` (`create_note`, `POST /notes`);
+background task — notes-api `src/notes_api/tasks.py` (`classify_and_writeback`, plus the
+`merge_tags` / `classifier_tags` helpers that namespace the labels and replace prior
+classifier tags); writeback endpoint — notes-api `src/notes_api/router.py` (`set_tags`,
+`PUT /notes/{id}/tags`) delegating to `src/notes_api/service.py` (`NoteService.set_tags`),
+schemas in `src/notes_api/schemas.py` (`TagsRequest`); classifier endpoint —
+`defense-news-classifier` `/classify`; label enums — classifier `src/classify.py`
+(`CATEGORIES`, `DOMAINS`).
 Related: [SYS-004](SYS-004-classify-http-contract.md) (the synchronous `/classify` seam,
 same enums + versioning discipline), notes-api `ADR-001` (the producer half + the R1
 idempotency mandate), [SYS-002](SYS-002-model-tier-standard.md) (model tier the task
