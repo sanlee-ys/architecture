@@ -39,7 +39,8 @@ capability is proven; it has simply never been pointed at the whole system. The 
 
 The relevant risks from the program register apply directly — **R3 (breadth creep)** and **R4
 (planning theater)**: a portal is documentation-of-documentation, the kind of polishing that can
-quietly preempt the actual keystone work (`SYS-003` evals-as-CI; the `notes-api` Kafka consumer).
+quietly preempt the actual keystone work (`SYS-003` evals-as-CI; the `notes-api`
+classify-and-writeback loop).
 The decision below is scoped to stay cheap and aggregation-only for exactly that reason.
 
 ## Decision

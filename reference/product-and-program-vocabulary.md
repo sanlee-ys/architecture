@@ -42,7 +42,7 @@ contrast is the single clearest signal of how the two crafts think.
 | **Blocking vs non-blocking** | A dependency that **stops** downstream work vs one that doesn't. | The `notes-api` writeback seam is **blocking**; OTel is non-blocking. |
 | **Load-bearing / critical path** | The dependencies the whole plan rests on. | Your own term: "the two load-bearing dependencies…" |
 | **Now / Next / Later** | Roadmap **horizons** — commitment decreases as you go right. | The whole roadmap section of the program view. |
-| **Milestone / phase gate** | A checkpoint that must pass before the next phase. | Phase 0 → 1 → 2 (local Kafka → containers → Strimzi). |
+| **Milestone / phase gate** | A checkpoint that must pass before the next phase. | Phase 0 → 1 → 2 (classify-writeback loop → containers + local K8s → durable task queue). |
 
 **The contrast that matters:** *Product asks "is it worth building?" (value). Program asks "what'll
 kill us, and what has to come first?" (risk + sequence).* Same loop, two completely different questions.
