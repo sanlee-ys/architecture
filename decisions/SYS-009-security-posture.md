@@ -27,7 +27,7 @@ not, and the rules that follow.*
 
 | Repo | Risk | What was done |
 |------|------|---------------|
-| `notes-api` | Medium | Bind to loopback by default, H2 console → test scope + disabled, error-leak hygiene; trust boundary documented in its `ADR-002`. No auth added by design (see rule 1). |
+| `notes-api` | Medium | Bind to loopback by default; no web-console exposure (SQLite has no built-in web UI, unlike the H2 console that was present in the Java/Spring Boot version); error-leak hygiene; trust boundary documented in its `ADR-002`. No auth added by design (see rule 1). |
 | `kb-agent` | Low–Med | Prompt-injection rule added to the agent system prompt; SSRF guard validates `projects.yaml` endpoints (http/https + loopback allowlist) before any call. |
 | `defense-news-classifier` | Low | `/classify` 502s no longer echo the raw upstream exception to callers (logged server-side instead). Already strong: non-root Docker, no secrets, pinned deps, output re-validated. |
 | `dotfiles` | Low | `.gitignore` now blocks plain `*.bak` (not just `*.bak.*`); README prefers the reviewed clone path over paste-into-shell. Key guardrails already effective. |

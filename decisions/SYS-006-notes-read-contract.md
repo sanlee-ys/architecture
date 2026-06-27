@@ -22,8 +22,8 @@ at runtime. This ADR freezes the read shape and ties the versioning rule to it.
 
 **Source of truth (read *from* the code, not invented here):**
 
-- Provider — `notes-api` `controller/NoteController.java` (`getAll`, `GET /notes` with
-  optional `?q=` and `?tag=`) and `dto/NoteResponse.java` (the response record).
+- Provider — notes-api `routers/notes.py` (`get_all`, `GET /notes` with optional `?q=`
+  and `?tag=`) and the `NoteResponse` schema in `schemas.py` (the response model).
 - Consumer — `kb-agent` `agent/tools.py` (`search_notes`, which GETs `{base}/notes`
   with `q`/`tag` params and reads `id`/`title`/`content`/`tags` out of each element).
 
@@ -65,9 +65,10 @@ non-breaking (the consumer ignores unknown fields).
 
 **Both sides carry tests for their half.** `kb-agent` has a `search_notes` contract suite
 (happy path + every failure mode → SYS-003 observation, all through the `_obs()` grader);
-`notes-api` has controller/response tests pinning the `GET /notes` shape. (Unlike a single
-process, there is no cross-repo live contract test on this read seam — each side tests its
-own end; a live round-trip is the same residual the event-loop seam tracks in SYS-005.)
+`notes-api` has router/schema tests pinning the `GET /notes` shape (FastAPI TestClient +
+SQLAlchemy in-memory SQLite). (Unlike a single process, there is no cross-repo live
+contract test on this read seam — each side tests its own end; a live round-trip is the
+same residual the event-loop seam tracks in SYS-005.)
 
 **Relationship to SYS-003 and SYS-004.** SYS-003 governs the *agent-facing* observation
 envelope `search_notes` returns to the model; SYS-006 governs the *HTTP wire shape*
@@ -99,8 +100,8 @@ observation.
 
 ---
 
-*Source of truth: provider — notes-api `controller/NoteController.java` (`getAll`) and
-`dto/NoteResponse.java`; consumer — kb-agent `agent/tools.py` (`search_notes`). Siblings:
+*Source of truth: provider — notes-api `routers/notes.py` (`get_all`) and
+`schemas.py` (`NoteResponse`); consumer — kb-agent `agent/tools.py` (`search_notes`). Siblings:
 [SYS-004](SYS-004-classify-http-contract.md) (the synchronous classify seam, same
 versioning discipline), [SYS-003](SYS-003-agent-tool-layer-contract.md) (the observation
 envelope `search_notes` returns), [SYS-005](SYS-005-event-loop-contract.md) (the async
