@@ -53,6 +53,7 @@ never ambiguous.
 | [SYS-006](decisions/SYS-006-notes-read-contract.md) | Freeze the GET /notes read contract between kb-agent and notes-api | Accepted |
 | [SYS-007](decisions/SYS-007-engineering-substrate-and-ai-skills.md) | Engineering is the substrate of the product & program tracks; an AI-skill map across all three | Accepted |
 | [SYS-008](decisions/SYS-008-documentation-portal.md) | A generated documentation portal — one browsable view over the whole system | Accepted |
+| [SYS-009](decisions/SYS-009-documentation-cascade.md) | Cascade documentation by altitude — one body of work, a distinct artifact per surface | Proposed |
 
 ## Writing a new ADR
 
