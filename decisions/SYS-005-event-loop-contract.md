@@ -96,6 +96,18 @@ response field) and by this ADR (the tag).
   the upgrade path is a durable task queue (Celery + Redis, or an outbox pattern) in place
   of BackgroundTasks — the writeback contract and the `PUT /notes/{id}/tags` endpoint are
   unchanged either way.
+- **The writeback's next form.** Idempotency and the namespace-merge are currently the
+  **caller's** job: the background task merges against the note's tags snapshot and `PUT`s the
+  full set, which opens a lost-update window if a user edits tags between the task's read and its
+  write. The documented upgrade path is a dedicated, classification-scoped
+  **`PATCH /notes/{id}/classification`** that carries the two typed labels and does the
+  strip-stale-then-upsert *inside notes-api*, against the note's **current** tags — so idempotency
+  becomes a property of the **contract** rather than the caller, the lost-update window closes,
+  and a second writeback path inherits the guarantee instead of re-implementing the merge.
+  Deferred for v0 (the generic `PUT /tags` keeps notes-api a generic notes service and the
+  caller-side merge already closes the loop); because it changes the writeback endpoint's shape it
+  is a breaking change under the *Versioning rule* above — a coordinated change across both repos
+  plus a superseding `SYS-NNN`.
 
 ## Alternatives Considered
 
