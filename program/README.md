@@ -1,7 +1,7 @@
 # Program View — Defense-News Intelligence
 
 **Status:** Living
-**Date:** 2026-06-23
+**Date:** 2026-06-28
 **Author:** San Lee
 
 The program-management companion to the [product one-pager](../product/one-pager.md): the
@@ -51,41 +51,24 @@ to a durable task queue is the remaining reliability step. Everything else is cr
 
 ## Roadmap — Now / Next / Later
 
-### Now (in flight)
-- **[product]** Product one-pager — ✅ done · [`product/one-pager.md`](../product/one-pager.md)
-- **[program]** This program view — 🔄 in progress
-- **[kb-agent]** `SYS-003` tool-layer contract — ✅ accepted **and implemented** · [`decisions/SYS-003`](../decisions/SYS-003-agent-tool-layer-contract.md); all three tools return the observation shape via `_success`/`_problem`, an `_obs()` grader enforces it, and the classifier seam (`classify_snippet`) is shipped and verified
-- **[kb-agent]** `SYS-002` model tier — ✅ implemented · `kb-agent` defaults to `claude-sonnet-4-6` per [`decisions/SYS-002`](../decisions/SYS-002-model-tier-standard.md), with a `KB_AGENT_MODEL` env knob to escalate without code changes
-- **[cross-cutting]** `SYS-004` `/classify` wire contract — ✅ accepted · [`decisions/SYS-004`](../decisions/SYS-004-classify-http-contract.md); the classifier↔kb-agent HTTP seam is frozen and enforced by contract tests on both sides (see R6-adjacent drift risk, now mitigated)
-- **[cross-cutting]** Evals-as-CI — 🔄 the `SYS-003` tool-layer eval gate is in place (deterministic shape-grader in `kb-agent/tests`) and **CI now runs across all three code repos** (defense-news-classifier, kb-agent, notes-api); capability/regression evals next
-- **[product]** Capstone narrative stub — ⬜ last artifact of the gap-closing pass
-- **[notes-api]** Tag the REST baseline (`v1-rest-baseline`) before event-driven work begins
+**Shipped (the foundation under everything below):** `SYS-001`–`SYS-009` recorded; the three code repos wired into one system (`kb-agent` ↔ `notes-api` ↔ `defense-news-classifier`), with the tool-layer and wire contracts frozen (`SYS-003`/`SYS-004`/`SYS-006`) and contract-tested on both sides; the classify-and-writeback loop closed (`SYS-005`, idempotent namespaced writeback, R1 mitigated); CI green across all three repos; the classifier at **`v2.0.0`** (real human-labeled gold eval plus a validated Opus judge); the documentation portal live (`SYS-008`); and `SYS-009` setting how work cascades across surfaces.
 
-### Next (right after the gap pass)
-- **[notes-api + classifier]** **Phase 0 classify-and-writeback loop — ✅ closed.** `notes-api`
-  (Python/FastAPI, `uv` toolchain) enqueues a `BackgroundTask` on `POST /notes` → calls
-  `{CLASSIFIER_URL}/classify` → reads `{category, operational_domain}` → writes labels back as
-  **namespaced** tags via an **idempotent** `PUT /notes/{id}/tags`. `CLASSIFIER_URL` unset =
-  no-op (safe default for dev/tests). Contract frozen in
-  [`system/SYS-005`](../decisions/SYS-005-event-loop-contract.md); closes R1;
-  `v1-rest-baseline` tagged before the work began.
-- **[classifier]** **Classify-and-writeback integration test** — ✅ done · unit tests cover the
-  `classify_and_writeback` task path (mock classifier + mock writeback), proving the wire contract
-  without a live service.
-- **[notes-api]** **Router/schema tests** — ✅ done · FastAPI TestClient tests assert the
-  `GET /notes`, `POST /notes`, and `PUT /notes/{id}/tags` shapes, run in CI via `uv run pytest`.
+### Now (in flight)
+- **[cross-cutting]** **Evals-as-CI**: the tool-layer shape-grader and cross-repo CI are in place; capability / regression evals are the next increment (closes R6).
+- **[classifier]** **Prompt-optimization loop**: spec + `classifier/ADR-005` landed (the "loop engineering" demo, rung 1). Design is locked; the build sits in Next. (`classifier/docs/specs/prompt-optimization-loop.md`.)
+- **[product]** **Capstone narrative stub**: the last artifact of the gap-closing pass.
+
+### Next
+- **[classifier]** `v2.0.1` backfill the v2 eval modules' missing tests, then `v2.1.0` **scale the gold eval** with the validated judge (shrinks the n≈54 noise floor).
+- **[classifier]** **Build the prompt-optimization loop (rung 1)**: an agent tunes the classifier prompt against the eval, guarded by a 3-way split (optimize / validation / held-out real gold). A new MINOR, sequenced after `v2.1.0` so its honest held-out number rests on a larger gold set.
 - **[program]** Start the **weekly status cadence**, harvested from real progress.
 
 ### Later
-- **[notes-api]** Phase 1 — containerize + local K8s; Phase 2 — explore durable task queue
-  (Celery + Redis or outbox) if reliability SLA tightens beyond best-effort BackgroundTasks.
-- **[kb-agent]** Add a `notes-api` tool — ✅ done · `search_notes` GETs notes-api's `/notes` over
-  HTTP (returning the `SYS-003` observation shape), so the agent reads the knowledge base through the
-  service that owns it, not a static stub. Read contract frozen in
-  [`system/SYS-006`](../decisions/SYS-006-notes-read-contract.md), tested on both sides — the **last
-  unbuilt edge in the dependency map is now wired**.
+- **[classifier]** `v2.2.0` tiered model routing (escalate only low-confidence boundary cases), then `v3.0.0` add a `region` field (a breaking schema change).
+- **[classifier]** **Loop demo rung 2**: an agent-driven ML loop (a tiny AutoML) where an outer agentic loop wraps a classical TF-IDF + logreg baseline and does error-driven feature engineering against the LLM. Consumes the parked classical-ML bake-off.
+- **[notes-api]** Phase 1 containerize + local K8s; Phase 2 a durable task queue (Celery + Redis or outbox) if the reliability SLA tightens beyond best-effort BackgroundTasks.
 - **[cross-cutting]** OTel observability across `notes-api` + `kb-agent`.
-- **[ops]** Operational-maturity track — Linux, ssh, health checks ("can I operate what I built?").
+- **[ops]** Operational-maturity track: Linux, ssh, health checks ("can I operate what I built?").
 - **[non-goal]** Other verticals (banking, etc.) — **articulated, not built**.
 
 ## Risk register
@@ -100,6 +83,7 @@ to a durable task queue is the remaining reliability step. Everything else is cr
 | R6 | **RAG ships unmeasured** — `kb-agent` integration could go out with no quality eval | Medium | 🔄 In progress: `SYS-003` sets an eval acceptance gate, the deterministic shape-grader is in `kb-agent/tests`, and **CI now runs across all three code repos**; next, add capability/regression evals | Now → evals-as-CI |
 | R7 | **`CLASSIFIER_URL` unset silently skips enrichment** — tag writeback is a no-op when the env var is absent, which is easy to miss in a deployed environment | Low | Document the env var prominently in notes-api README; the no-op is a deliberate safe default for dev/tests, but must be set explicitly in any environment where enrichment is expected | `notes-api`, `system/SYS-005` |
 | R8 | **Silent contract drift on the `/classify` seam** — classifier (provider) and `kb-agent` (consumer) are separate repos, so a renamed response field or changed enum could mis-read at runtime with nothing failing | Medium | ✅ Mitigated: `system/SYS-004` freezes the wire contract and ties a breaking-change → MAJOR-bump + coordinated-update rule to it; **contract tests on both sides** (in CI) turn any drift into a red build | `system/SYS-004` |
+| R9 | **Loop optimizes against the eval (Goodhart)** — the prompt-optimization loop tunes the prompt to the very metric it is scored on, so it can game the eval instead of genuinely generalizing | Medium | Mitigated by design: a 3-way split (optimize / validation / held-out real gold), with the done-signal riding the validation set and the untouched held-out number reported honestly whichever way it moves. The overfitting gap is the artifact's centerpiece, not a hidden failure | `classifier/ADR-005`, `classifier/docs/specs/prompt-optimization-loop.md` |
 
 ## On the "simulated program"
 
