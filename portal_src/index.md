@@ -6,9 +6,9 @@ a first static cut of the **system map** (the interactive version is `SYS-008`, 
 ```mermaid
 graph TD
   KB["kb-agent<br/>RAG + tool-use"] -->|"classify_snippet → /classify"| DNC["defense-news-classifier"]
-  KB -->|"search_notes → GET /notes"| API["notes-api<br/>Spring Boot"]
-  API -->|"note-events (Kafka)"| DNC
-  DNC -->|"idempotent tags writeback"| API
+  KB -->|"search_notes → GET /notes"| API["notes-api<br/>FastAPI"]
+  API -->|"BackgroundTask → /classify"| DNC
+  API -->|"writes labels back as tags"| API
   ARCH["architecture<br/>ADRs + this portal"] -.->|"governs"| KB
   ARCH -.->|"governs"| API
   ARCH -.->|"governs"| DNC
