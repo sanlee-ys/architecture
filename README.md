@@ -54,6 +54,7 @@ never ambiguous.
 | [SYS-007](decisions/SYS-007-engineering-substrate-and-ai-skills.md) | Engineering is the substrate of the product & program tracks; an AI-skill map across all three | Accepted |
 | [SYS-008](decisions/SYS-008-documentation-portal.md) | A generated documentation portal — one browsable view over the whole system | Accepted |
 | [SYS-009](decisions/SYS-009-documentation-cascade.md) | Cascade documentation by altitude — one body of work, a distinct artifact per surface | Proposed |
+| [SYS-010](decisions/SYS-010-security-posture.md) | Security posture — the local-service trust model and house security rules | Accepted |
 
 ## Writing a new ADR
 

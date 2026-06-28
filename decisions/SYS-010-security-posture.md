@@ -1,4 +1,4 @@
-# SYS-009: Security posture — the local-service trust model and house security rules
+# SYS-010: Security posture — the local-service trust model and house security rules
 
 **Status:** Accepted
 **Date:** 2026-06-26
