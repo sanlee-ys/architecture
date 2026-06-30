@@ -4,7 +4,7 @@
 **Date:** 2026-06-22
 **Author:** San Lee
 **Purpose:** The working language of each track, grounded in our real artifacts — the
-[feature spec](../product/specs/event-driven-classification-loop.md) (product) and the
+[product one-pager](../product/one-pager.md) (product) and the
 [program view](../program/README.md) (program) — so you can *read and speak both* and feel which
 one fits. This is a learning aid for the SWE→PM/TPM exploration, not a system doc.
 
