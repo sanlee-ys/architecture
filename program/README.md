@@ -51,7 +51,7 @@ to a durable task queue is the remaining reliability step. Everything else is cr
 
 ## Roadmap — Now / Next / Later
 
-**Shipped (the foundation under everything below):** `SYS-001`–`SYS-009` recorded; the three code repos wired into one system (`kb-agent` ↔ `notes-api` ↔ `defense-news-classifier`), with the tool-layer and wire contracts frozen (`SYS-003`/`SYS-004`/`SYS-006`) and contract-tested on both sides; the classify-and-writeback loop closed (`SYS-005`, idempotent namespaced writeback, R1 mitigated); CI green across all three repos; the classifier at **`v2.0.0`** (real human-labeled gold eval plus a validated Opus judge); the documentation portal live (`SYS-008`); and `SYS-009` setting how work cascades across surfaces.
+**Shipped (the foundation under everything below):** `SYS-001`–`SYS-010` recorded; the three code repos wired into one system (`kb-agent` ↔ `notes-api` ↔ `defense-news-classifier`), with the tool-layer and wire contracts frozen (`SYS-003`/`SYS-004`/`SYS-006`) and contract-tested on both sides; the classify-and-writeback loop closed (`SYS-005`, idempotent namespaced writeback, R1 mitigated); CI green across all three repos; the classifier at **`v2.0.0`** (real human-labeled gold eval plus a validated Opus judge); the documentation portal live (`SYS-008`); `SYS-009` setting how work cascades across surfaces, and `SYS-010` recording the security posture.
 
 ### Now (in flight)
 - **[cross-cutting]** **Evals-as-CI**: the tool-layer shape-grader and cross-repo CI are in place; capability / regression evals are the next increment (closes R6).

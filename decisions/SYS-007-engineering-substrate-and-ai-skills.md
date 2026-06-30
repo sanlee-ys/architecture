@@ -11,7 +11,7 @@
 The `architecture` repo has grown a career-exploration layer alongside its technical one. Two of
 the three tracks already have real homes:
 
-- **Product** — the [one-pager](../product/one-pager.md) and feature [specs](../product/specs/).
+- **Product** — the [one-pager](../product/one-pager.md).
 - **Program** — the [program view](../program/README.md): workstreams, dependency map,
   Now/Next/Later, risk register.
 - A shared [vocabulary decoder](../reference/product-and-program-vocabulary.md) frames the whole
@@ -65,7 +65,7 @@ The map — five clusters, what each means per track, and **where it already liv
 
 | Skill cluster | Engineering (substrate) | Program (TPM) | Product (PM) | Already in the system |
 |---|---|---|---|---|
-| **Evals & quality bars** *(keystone)* | Golden sets, LLM-as-judge, regression gates in CI | Own the org-wide "good enough to ship" bar | Author the rubric — *what* "good" means | classifier eval (97.3% / ~79%); `SYS-003` eval gate; evals-as-CI (R6) |
+| **Evals & quality bars** *(keystone)* | Golden sets, LLM-as-judge, regression gates in CI | Own the org-wide "good enough to ship" bar | Author the rubric — *what* "good" means | classifier eval (v2: 88.9% / 88.9%; v1 was 97.3% / ~79%); `SYS-003` eval gate; evals-as-CI (R6) |
 | **Context engineering & memory** | Window budgeting, retrieval, chunk/result caps | Plan context/data dependencies across teams | System prompt + memory as a versioned surface | `kb-agent` RAG; `SYS-003` rule 4 (context-budget discipline) |
 | **Agents & orchestration** | Tool design, workflows-vs-agents, retries, HITL | Manage nondeterministic delivery (confidence, not dates) | Design for the failure case; trust & correction UX | `kb-agent` manual tool-use loop; `SYS-003` tool-layer contract |
 | **Observability, cost & reliability** | Tracing across agent steps, token/latency/drift | Capacity & inference unit-economics planning | Latency↔quality, cost-per-query as product calls | OTel (roadmap, Later); `SYS-002` model-tier; R7 |
