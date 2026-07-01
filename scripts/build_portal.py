@@ -9,13 +9,15 @@ that MkDocs renders. Nothing here is authored by hand except the chrome in
 
     uv run --no-env-file --no-project python scripts/build_portal.py
 
-Two jobs:
+Three jobs:
   1. Copy each repo's README / docs / decisions into portal/.
   2. Rewrite relative links so the portal is navigable AND every code reference becomes
      a one-click jump to GitHub (SYS-008, "code is always one click away"):
        - link to a doc we also copied   -> left relative (in-portal navigation)
        - link to source/config in repo  -> rewritten to github.com/<org>/<repo>/blob/...
        - link that resolves nowhere      -> left as-is (broken at the source, not here)
+  3. Generate the Roadmap page (SYS-011) from program/README.md's Now/Next/Later section
+     plus each app's live pyproject.toml version — no roadmap state is hand-duplicated.
 
 It is cwd-independent (paths resolve from this file) and reads the sibling repos as they
 sit on disk next to `architecture/`. The same script runs in CI after the repos are
@@ -25,6 +27,7 @@ from __future__ import annotations
 
 import re
 import shutil
+import tomllib
 from pathlib import Path
 from urllib.parse import urlparse
 
@@ -52,6 +55,18 @@ ARCH_DIRS = ["decisions", "program", "engineering", "case-study", "product", "re
 # Per repo, which top-level dirs we actually copy into the portal. A link landing inside
 # one of these is navigable in-portal and stays relative; anything else points to source.
 APP_COPIED = {"docs", "decisions"}
+
+# program/README.md tags its Now/Next/Later bullets with a short workstream label
+# (e.g. "**[classifier]**"), not the repo folder name. Map the ones that mean an app repo;
+# everything else (cross-cutting, product, program, ops, non-goal, ...) is cross-cutting.
+ROADMAP_TAG_TO_FOLDER = {
+    "classifier": "defense-news-classifier",
+    "notes-api": "notes-api",
+    "kb-agent": "kb-agent",
+}
+
+ROADMAP_BULLET = re.compile(r"^- \*\*\[([\w-]+)\]\*\*\s*(.*)$")
+ROADMAP_BUCKET_HEADING = re.compile(r"^### (Now|Next|Later)\b")
 
 # Matches inline markdown links and images: [text](target) / ![alt](target "title").
 INLINE_LINK = re.compile(r'(!?\[[^\]]*\]\()([^)\s]+)((?:\s+"[^"]*")?\))')
@@ -188,12 +203,103 @@ def write_indexes() -> None:
     )
 
 
+def read_version(folder: str) -> str:
+    """An app's live version, read straight from its pyproject.toml. Never duplicated
+    into a second file — SYS-011 (this dashboard cannot drift from reality)."""
+    pyproject = ROOT / folder / "pyproject.toml"
+    if not pyproject.exists():
+        return "—"
+    with pyproject.open("rb") as f:
+        data = tomllib.load(f)
+    return data.get("project", {}).get("version", "—")
+
+
+def parse_roadmap() -> dict[str, list[tuple[str, str]]]:
+    """The Now/Next/Later bullets from program/README.md's roadmap section, each as
+    (tag, text). The section runs from its own heading to the next top-level '## '."""
+    readme = (ARCH / "program" / "README.md").read_text(encoding="utf-8").splitlines()
+    buckets: dict[str, list[tuple[str, str]]] = {"Now": [], "Next": [], "Later": []}
+    in_section = False
+    bucket = None
+    for line in readme:
+        if line.startswith("## Roadmap"):
+            in_section = True
+            continue
+        if not in_section:
+            continue
+        if line.startswith("## "):
+            break  # left the roadmap section
+        heading = ROADMAP_BUCKET_HEADING.match(line)
+        if heading:
+            bucket = heading.group(1)
+            continue
+        bullet = ROADMAP_BULLET.match(line)
+        if bullet and bucket:
+            buckets[bucket].append((bullet.group(1), bullet.group(2)))
+    return buckets
+
+
+def write_roadmap() -> None:
+    """Generate the Roadmap page (SYS-011): one card per app with its live version and
+    Now/Next/Later items, plus a cross-cutting list for tags that aren't an app repo.
+    Everything here is read from program/README.md and each app's pyproject.toml —
+    nothing on this page is authored by hand."""
+    buckets = parse_roadmap()
+
+    cards = []
+    for folder, name in APPS:
+        version = read_version(folder)
+        lines = [f"-   **{name}** `v{version}`", "", "    ---"]
+        has_items = False
+        for bucket_name in ("Now", "Next", "Later"):
+            items = [
+                text for tag, text in buckets[bucket_name]
+                if ROADMAP_TAG_TO_FOLDER.get(tag) == folder
+            ]
+            if not items:
+                continue
+            has_items = True
+            lines.append(f"\n    **{bucket_name}**\n")
+            for text in items:
+                lines.append(f"    - {text}")
+        if not has_items:
+            lines.append("\n    Nothing in flight — see [Program](program/README.md) for what shipped.")
+        cards.append("\n".join(lines))
+
+    cross_cutting = []
+    for bucket_name in ("Now", "Next", "Later"):
+        items = [
+            (tag, text) for tag, text in buckets[bucket_name]
+            if tag not in ROADMAP_TAG_TO_FOLDER
+        ]
+        if not items:
+            continue
+        cross_cutting.append(f"\n**{bucket_name}**\n")
+        for tag, text in items:
+            cross_cutting.append(f"- **[{tag}]** {text}")
+
+    page = (
+        "# Roadmap\n\n"
+        "The system's status at a glance — generated from "
+        "[`program/README.md`](program/README.md#roadmap-now-next-later) (the curated "
+        "Now/Next/Later plan) and each app's live version. Edit the source, not this page "
+        "(`system/SYS-011`).\n\n"
+        '<div class="grid cards" markdown>\n\n'
+        + "\n\n".join(cards)
+        + "\n\n</div>\n\n"
+        "## Cross-cutting & program\n"
+        + "\n".join(cross_cutting) + "\n"
+    )
+    (PORTAL / "roadmap.md").write_text(page, encoding="utf-8")
+
+
 def main() -> None:
     reset_portal()
     copy_chrome()
     copy_arch_sections()
     copy_apps()
     write_indexes()
+    write_roadmap()
     pages = sum(1 for _ in PORTAL.rglob("*.md"))
     print(f"Portal assembled at {PORTAL} ({pages} pages).")
 
