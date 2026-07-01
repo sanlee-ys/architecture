@@ -1,7 +1,9 @@
 # Projects — System Portal
 
 One place to read the whole system and jump straight to the code. Here's the shape of it —
-a first static cut of the **system map** (the interactive version is `SYS-008`, Phase 2):
+a first static cut of the **system map** (the interactive version is `SYS-008`, Phase 2).
+For where everything actually stands right now — versions, what's shipping next — see the
+[Roadmap](roadmap.md) (`SYS-011`):
 
 ```mermaid
 graph TD
@@ -21,6 +23,12 @@ graph TD
 ## Jump in
 
 <div class="grid cards" markdown>
+
+-   **Roadmap**
+
+    The whole system's status at a glance — live versions plus what's now, next, and later.
+
+    [Open the roadmap →](roadmap.md)
 
 -   **Decisions**
 

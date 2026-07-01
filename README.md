@@ -55,6 +55,7 @@ never ambiguous.
 | [SYS-008](decisions/SYS-008-documentation-portal.md) | A generated documentation portal — one browsable view over the whole system | Accepted |
 | [SYS-009](decisions/SYS-009-documentation-cascade.md) | Cascade documentation by altitude — one body of work, a distinct artifact per surface | Proposed |
 | [SYS-010](decisions/SYS-010-security-posture.md) | Security posture — the local-service trust model and house security rules | Accepted |
+| [SYS-011](decisions/SYS-011-generated-roadmap-dashboard.md) | A generated roadmap dashboard — the whole system's status at a glance | Accepted |
 
 ## Writing a new ADR
 
