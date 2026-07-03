@@ -57,6 +57,7 @@ never ambiguous.
 | [SYS-010](decisions/SYS-010-security-posture.md) | Security posture — the local-service trust model and house security rules | Accepted |
 | [SYS-011](decisions/SYS-011-generated-roadmap-dashboard.md) | A generated roadmap dashboard — the whole system's status at a glance | Accepted |
 | [SYS-012](decisions/SYS-012-pages-actions-deployment.md) | GitHub Pages — deploy via Actions, not the legacy branch build | Accepted |
+| [SYS-013](decisions/SYS-013-self-healing-by-default.md) | Design services to self-heal — detect and recover before a human has to | Accepted |
 
 ## Writing a new ADR
 
