@@ -7,3 +7,5 @@ desktop.ini
 # `portal/` is assembled by scripts/build_portal.py; `site/` is the MkDocs build output.
 portal/
 site/
+
+graphify-out/

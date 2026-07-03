@@ -66,6 +66,14 @@ the system *deliberately* diverges (it skips long-running autonomy on purpose) �
 [`2026-agentic-coding-trends-mapping.md`](2026-agentic-coding-trends-mapping.md). Convergent, not
 copied: the multi-session playbook it draws on was written after a real collision, not from the report.
 
+## Tool evaluations
+
+Third-party tools evaluated for adoption into this system, with credit and honest findings:
+
+- [`graphify-knowledge-graph-eval.md`](graphify-knowledge-graph-eval.md) — evaluation of
+  [graphify](https://github.com/safishamsi/graphify) (safishamsi, MIT) as a cross-repo knowledge
+  graph, now wired in as an MCP server + per-repo git hooks.
+
 ## Honest limitations
 
 Stated plainly, because naming them is more credible than hiding them — and the reasoning still holds:
