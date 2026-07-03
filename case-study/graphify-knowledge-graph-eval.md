@@ -12,11 +12,11 @@ a claim of originality on the underlying technique.
 
 ## The problem
 
-Across eleven repos ([architecture](..), `notes-api`, `defense-news-classifier`, `kb-agent`,
-`learning-notes`, `portfolio`, `sanlee-ys`, `career`, `finance`, `training`, `dotfiles`), the
-cross-repo relationships — which ADR references which, which service calls which contract — lived
-only in my head and in whatever an AI assistant could re-derive by grepping each session. That
-doesn't scale, and it's not reusable across sessions.
+Across eleven repos — the public engineering projects ([architecture](..), `notes-api`,
+`defense-news-classifier`, `kb-agent`, `learning-notes`, `portfolio`, `sanlee-ys`, `dotfiles`) plus
+several private personal repos — the cross-repo relationships — which ADR references which, which
+service calls which contract — lived only in my head and in whatever an AI assistant could
+re-derive by grepping each session. That doesn't scale, and it's not reusable across sessions.
 
 ## What graphify does
 
@@ -73,9 +73,9 @@ pipeline is the semantic-extraction LLM call itself. I verified this by grepping
 `export.py`, `ingest.py`, and `global_graph.py` for telemetry/analytics/upload patterns; found
 none. The MCP server is stdio-only (no network listener), and nothing is pushed to git — output
 is 100% local to `graphify-out/` per repo or `~/.graphify/global-graph.json`. That mattered here
-because two of the eleven repos (`career`, `finance`) contain real comp-negotiation and financial
-content — the risk surface reduces to "is this content OK to send through the Anthropic API,"
-which I'd already accepted for those repos in normal use, not a new exposure.
+because some of the private repos in the corpus contain sensitive personal content — the risk
+surface reduces to "is this content OK to send through the Anthropic API," which I'd already
+accepted for those repos in normal use, not a new exposure.
 
 ## What didn't work cleanly
 
