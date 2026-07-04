@@ -78,8 +78,8 @@ Q&A over the knowledge base.
 
 **Non-goals (v1):**
 
-- **Other verticals (e.g. banking).** The patterns are meant to generalize, but generalization
-  is *articulated, not built* — one vehicle, done deeply.
+- **Other verticals (e.g. banking).** The patterns are meant to generalize, but that's a
+  direction, not shipped code — one vehicle, done deeply.
 - Custom model training / fine-tuning.
 - Multi-user or real-time / high-throughput scale.
 - UI polish.

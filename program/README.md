@@ -69,7 +69,7 @@ to a durable task queue is the remaining reliability step. Everything else is cr
 - **[notes-api]** Phase 1 containerize + local K8s; Phase 2 a durable task queue (Celery + Redis or outbox) if the reliability SLA tightens beyond best-effort BackgroundTasks.
 - **[cross-cutting]** OTel observability across `notes-api` + `kb-agent`.
 - **[ops]** Operational-maturity track: Linux, ssh, health checks ("can I operate what I built?").
-- **[non-goal]** Other verticals (banking, etc.) — **articulated, not built**.
+- **[non-goal]** Other verticals (banking, etc.) — written down as a direction, not shipped.
 
 ## Risk register
 
