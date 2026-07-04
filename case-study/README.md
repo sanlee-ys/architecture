@@ -21,7 +21,7 @@ with the engineering and decision-making around it.
 ## The system at a glance
 
 - **Where AI is applied:** one vertical (defense), gone deep. Generalization to others (e.g. banking)
-  is *articulated, not built*.
+  is a stated direction here, not shipped code.
 - **How AI is used:** LLM classification with an eval harness → a knowledge-base service → a
   RAG + tool-use agent → evals-as-CI to keep quality from regressing.
 - **The engineering around it:** async enrichment (FastAPI BackgroundTasks), container orchestration (K8s),
