@@ -29,6 +29,10 @@ with the engineering and decision-making around it.
 
 See the [dependency map](../program/README.md#dependency-map) for how the pieces connect.
 
+> **Want the non-technical tour?** The plain-language [learning-notes](https://sanlee-ys.github.io/learning-notes/) explain
+> every concept here in five short sections each — start with the
+> [interactive concept map](https://sanlee-ys.github.io/learning-notes/concept-map.html).
+
 ## Decisions that shaped it
 
 The heart of the case study. Each row is a real tradeoff with the reasoning preserved — this is what
