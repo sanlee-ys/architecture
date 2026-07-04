@@ -1,13 +1,5 @@
 # Dependabot: automated dependency-update PRs.
 # https://docs.github.com/code-security/dependabot/dependabot-version-updates
-#
-# NOTE: only GitHub Actions are tracked here. This repo's Python side
-# (scripts/build_portal.py) has no dependency manifest — portal.yml installs
-# mkdocs-material unpinned via `pip install mkdocs-material` with no version
-# and no requirements file, so there's nothing for Dependabot to scan or bump.
-# That's a real reproducibility gap, but pinning it is a CI change, not a
-# scanning one — out of scope here. Dependabot *alerts* (a repo-settings
-# toggle, not this file) still give vulnerability visibility regardless.
 version: 2
 updates:
   - package-ecosystem: "github-actions"
@@ -20,3 +12,11 @@ updates:
     groups:
       github-actions:
         update-types: ["minor", "patch"]
+
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "ci"

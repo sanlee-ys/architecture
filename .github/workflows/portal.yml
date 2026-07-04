@@ -46,7 +46,7 @@ jobs:
           python-version: "3.12"
 
       - name: Install MkDocs Material
-        run: pip install mkdocs-material
+        run: pip install -r architecture/requirements.txt
 
       - name: Assemble the portal docs tree
         run: python architecture/scripts/build_portal.py
