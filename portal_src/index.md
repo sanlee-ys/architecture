@@ -65,3 +65,4 @@ graph TD
 | **notes-api** | [In portal](apps/notes-api/index.md) | [GitHub ↗](https://github.com/sanlee-ys/notes-api) |
 | **defense-news-classifier** | [In portal](apps/defense-news-classifier/index.md) | [GitHub ↗](https://github.com/sanlee-ys/defense-news-classifier) |
 | **learning-notes** | plain-language concept notes | [GitHub ↗](https://github.com/sanlee-ys/learning-notes) |
+| **claude-ops** | the Claude operating layer — incidents, security posture, skills (`SYS-015`) | [GitHub ↗](https://github.com/sanlee-ys/claude-ops) |
