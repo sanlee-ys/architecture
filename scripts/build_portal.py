@@ -73,7 +73,16 @@ INLINE_LINK = re.compile(r'(!?\[[^\]]*\]\()([^)\s]+)((?:\s+"[^"]*")?\))')
 
 
 def in_portal(repo_folder: str, rel: Path) -> bool:
-    """True if the repo-relative path is something we copy into the portal."""
+    """Return whether a repo-relative path is something we copy into the portal.
+
+    Args:
+        repo_folder: The source repo's folder name (e.g. "architecture", "notes-api").
+        rel: A path relative to that repo's root.
+
+    Returns:
+        True if the path lands inside a subtree the portal aggregates, so an
+        in-portal link to it stays relative rather than being rewritten to GitHub.
+    """
     parts = rel.parts
     if not parts:
         return False
@@ -83,7 +92,21 @@ def in_portal(repo_folder: str, rel: Path) -> bool:
 
 
 def rewrite_links(text: str, md_rel: Path, repo_folder: str, repo_root: Path) -> str:
-    """Resolve each relative link against the repo on disk and rewrite code refs to GitHub."""
+    """Rewrite a Markdown file's relative links for the portal.
+
+    Each relative link is resolved against the repo on disk: links to docs the
+    portal also copies stay relative, links to source/config are rewritten to a
+    GitHub blob/tree URL, and links that resolve nowhere are left untouched.
+
+    Args:
+        text: The Markdown file's full contents.
+        md_rel: The file's path relative to its repo root (used to resolve links).
+        repo_folder: The source repo's folder name.
+        repo_root: Absolute path to the source repo on disk.
+
+    Returns:
+        The Markdown text with links rewritten per the rules above.
+    """
     src_dir = (repo_root / md_rel).parent
     root = repo_root.resolve()
 
@@ -113,7 +136,16 @@ def rewrite_links(text: str, md_rel: Path, repo_folder: str, repo_root: Path) ->
 
 
 def aggregate_tree(repo_folder: str, repo_root: Path, src: Path, dest: Path, rel_base: Path) -> None:
-    """Copy a repo subtree into the portal, rewriting links in every markdown file."""
+    """Copy a repo subtree into the portal, rewriting links in every Markdown file.
+
+    Args:
+        repo_folder: The source repo's folder name.
+        repo_root: Absolute path to the source repo on disk.
+        src: The subtree to copy from.
+        dest: Where to write the copied subtree under the portal.
+        rel_base: The current path relative to the repo root, accumulated as
+            recursion descends so links resolve correctly.
+    """
     for child in sorted(src.iterdir()):
         rel = rel_base / child.name
         out = dest / child.name
@@ -204,8 +236,18 @@ def write_indexes() -> None:
 
 
 def read_version(folder: str) -> str:
-    """An app's live version, read straight from its pyproject.toml. Never duplicated
-    into a second file — SYS-011 (this dashboard cannot drift from reality)."""
+    """Read an app's live version straight from its pyproject.toml.
+
+    Never duplicated into a second file — SYS-011 (this dashboard cannot drift
+    from reality).
+
+    Args:
+        folder: The app repo's folder name, a sibling of the architecture repo.
+
+    Returns:
+        The version string from ``[project] version``, or "—" if the file or
+        field is absent.
+    """
     pyproject = ROOT / folder / "pyproject.toml"
     if not pyproject.exists():
         return "—"
@@ -215,8 +257,14 @@ def read_version(folder: str) -> str:
 
 
 def parse_roadmap() -> dict[str, list[tuple[str, str]]]:
-    """The Now/Next/Later bullets from program/README.md's roadmap section, each as
-    (tag, text). The section runs from its own heading to the next top-level '## '."""
+    """Parse the Now/Next/Later bullets from program/README.md's roadmap section.
+
+    The section runs from its own heading to the next top-level '## '.
+
+    Returns:
+        A dict keyed by bucket ("Now", "Next", "Later"), each mapping to a list
+        of (tag, text) pairs — the short workstream label and the bullet body.
+    """
     readme = (ARCH / "program" / "README.md").read_text(encoding="utf-8").splitlines()
     buckets: dict[str, list[tuple[str, str]]] = {"Now": [], "Next": [], "Later": []}
     in_section = False
