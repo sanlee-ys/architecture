@@ -1,6 +1,6 @@
 # SYS-005: Close the classify-and-writeback loop — freeze the contract
 
-**Status:** Accepted (updated 2026-06-27 — Kafka replaced by FastAPI BackgroundTasks)
+**Status:** Accepted (updated 2026-06-27 — Kafka replaced by FastAPI BackgroundTasks; updated 2026-07-05 — classifier call now retries transient failures per SYS-013)
 **Date:** 2026-06-23
 **Deciders:** San Lee
 
@@ -66,8 +66,11 @@ instead of the writeback failing with a 400.
 
 **Idempotency (closes R1).** Because the writeback replaces a deterministic set and the
 classifier tags are namespaced, re-running the task for the same note converges to the same
-tags. A transient failure (LLM/network error, 5xx) is logged and dropped — the task does
-not retry automatically (acceptable at this scale; a retry queue is the upgrade path if
+tags. Per SYS-013, a transient failure (connection error, timeout, 5xx) now retries with
+backoff (3 attempts, 2s/4s) before giving up; a non-retryable failure (4xx, or any other
+error shape) is logged and dropped immediately since retrying the same body won't help.
+Retry is in-process only — a crashed worker still loses the enrichment for that request
+(acceptable at this scale; a durable retry/dead-letter queue is the upgrade path if
 reliability SLA tightens). A 404 (note deleted before writeback) is logged and skipped.
 
 **`CLASSIFIER_URL` unset = no-op.** When the env var is absent, `classify_and_writeback`
@@ -134,4 +137,5 @@ schemas in `src/notes_api/schemas.py` (`TagsRequest`); classifier endpoint —
 Related: [SYS-004](SYS-004-classify-http-contract.md) (the synchronous `/classify` seam,
 same enums + versioning discipline), notes-api `ADR-001` (the producer half + the R1
 idempotency mandate), [SYS-002](SYS-002-model-tier-standard.md) (model tier the task
-classifies at).*
+classifies at), [SYS-013](SYS-013-self-healing-by-default.md) (the retry-and-visibility
+mandate this update implements).*
