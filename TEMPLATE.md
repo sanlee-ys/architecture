@@ -19,6 +19,12 @@ What problem or decision point prompted this? What forces and constraints are at
 
 What was chosen. Name the mechanism, not just the intent.
 
+## Downstream surfaces
+
+Which surfaces restate or depend on what this decision changes — READMEs, portfolio copy,
+sync registries, setup scripts, generated-doc sources? List them; the landing PR sweeps
+them or files a fast-follow (SYS-009). "None" is a valid answer but must be written.
+
 ## Consequences
 
 - **What this makes easier.**
