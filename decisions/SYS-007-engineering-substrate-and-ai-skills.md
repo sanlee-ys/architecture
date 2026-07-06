@@ -29,8 +29,8 @@ program are documented as crafts; the craft they both sit on is left implicit.
 exercising.** The vocabulary doc teaches P0/MoSCoW, risk severity, JTBD — durable, necessary, and
 pre-AI. But this system *is* a tour of post-2023 practice: an eval harness, a tool-use agent, RAG,
 a model-tier standard, observability on the roadmap. The portfolio **builds** these and never
-**names** them as a learning target — and an unarticulated skill doesn't transfer to an interview
-or a case study.
+**names** them as a learning target — and an unarticulated skill doesn't transfer to a case
+study or a technical conversation about the work.
 
 The forces, from the north-star and the existing risk register: the goal is **one credible person
 across three hats, not three disconnected personas** — so engineering must be positioned to
@@ -107,7 +107,8 @@ follow-on) so the *delivery* plan and the *learning* plan stay in sync.
 - **One foundation, three hats — the narrative the north-star needs.** A reviewer sees engineering
   depth holding up the P-tracks, not a third disconnected résumé.
 - **The portfolio gains a named learning target,** not just artifacts — closing the "builds it but
-  never articulates it" gap that would otherwise cost transfer in interviews and the capstone.
+  never articulates it" gap that would otherwise cost transfer in the capstone and any technical
+  conversation about the work.
 - **Evals are explicitly the keystone,** which independently justifies prioritizing evals-as-CI
   (already *Now*) as the single best cross-hat artifact.
 - **The real gaps are surfaced and sequenced** — security especially, which had zero coverage and
