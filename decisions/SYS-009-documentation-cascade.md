@@ -1,7 +1,7 @@
 # SYS-009: Cascade documentation by altitude — one body of work, a distinct artifact per surface
 
-**Status:** Accepted
-**Date:** 2026-06-27 (accepted 2026-06-29)
+**Status:** Accepted (amended 2026-07-05: reframings cascade too; decision records name their blast radius; volatility rule for outward surfaces)
+**Date:** 2026-06-27 (accepted 2026-06-29, amended 2026-07-05)
 **Deciders:** San Lee
 
 ---
@@ -48,7 +48,41 @@ When something is cut, renamed, ported, or otherwise scrapped — a dropped depe
 4. **Verify against the current remote.** A local clone that is behind `main` will re-confirm the stale version as correct — the same sync-first discipline each repo's CLAUDE.md already demands.
 5. **The PR names the surfaces it swept** (or files a fast-follow for the rest), so the cascade is auditable.
 
-A periodic cross-repo **consistency audit** — grep the canonical facts (metrics, stack, app names, firm name) across every public surface and diff them — is the backstop that catches whatever a single sweep missed.
+A periodic cross-repo **consistency audit** — grep the canonical facts (metrics, stack, app names, firm name) across every public surface and diff them — is the backstop that catches whatever a single sweep missed. The audit checks **meaning, not just terms**: alongside the greps, read the outward surfaces' *claims* against the current decision records and flag restatements of a superseded framing, which no grep for an old term will catch.
+
+### Reframings cascade the same way (amendment, 2026-07-05)
+
+A de-scope (something cut, renamed, ported) is not the only ground-truth change that rots
+derivative surfaces. A **reframing** — a new decision that changes the *organizing story*
+without removing anything — carries the same sweep obligation. The motivating instance:
+`classifier/ADR-006` reframed the portfolio spine as a four-level autonomy ladder; nothing
+was cut, every old fact stayed true, yet the GitHub profile README went on telling the
+pre-ladder story. A reframing is harder to catch than a de-scope because there is no old
+term to grep for; the stale surface is *accurate but superseded*. That is why the two rules
+below exist.
+
+### Decision records name their blast radius (amendment, 2026-07-05)
+
+Every new decision record — `SYS-*` here and repo-local `ADR-*` alike — includes a
+**Downstream surfaces** section: the list of surfaces that restate or depend on what the
+decision changes (READMEs, portfolio copy, sync registries, setup scripts, generated-doc
+sources). "None" is a valid entry, but it must be written, because the failure mode is not
+listing the wrong surfaces — it is never asking the question. The landing PR sweeps the
+listed surfaces or files a fast-follow, same as the de-scope drill. This is the prose analog
+of a sync script's consumer registry: the registry is what turns "we decided X" into "every
+copy of X moved." Both misses on 2026-07-05 shared this root cause — dotfiles PR #6 decided
+a skill stays repo-local but did not update the sync registry that decision touched, and
+ADR-006 landed the ladder without touching the profile README that restates the spine.
+
+### Volatility rule for outward surfaces (amendment, 2026-07-05)
+
+Outward-facing surfaces that restate the system (the GitHub profile README, portfolio
+landing copy) restate **shipped facts only, and link to the canonical source for the
+evolving story**. Shipped facts are immutable history — "v2 added BM25 and the lift was
+marginal" ages perfectly. Plans and organizing framings move with every ADR, so every
+surface that restates one becomes a standing sweep obligation. Restate the slow-moving,
+link the fast-moving. This is prevention where the blast-radius rule is mitigation: prose
+that does not exist cannot drift.
 
 ## Consequences
 
@@ -58,6 +92,7 @@ A periodic cross-repo **consistency audit** — grep the canonical facts (metric
 - **Forecloses the convenience of one canonical doc reused everywhere**, deliberately. That convenience is exactly what produces stale copies and wrong-altitude content.
 - **Not every landing hits all four surfaces.** A pure bugfix may never leave its repo. The convention says *where each kind of artifact goes when it is warranted*, not that every change must fan out.
 - **A ground-truth change carries a sweep obligation.** Because each surface holds a *transformed* copy, moving the substrate (a port, a migration, a dropped dependency) silently rots those copies. Naming the dependent surfaces in the change's PR is what keeps the cascade honest in both directions; skipping it is how learning-notes drifted a full architecture behind the notes-api code.
+- **Every decision record now costs a "Downstream surfaces" pass** (2026-07-05 amendment). Accepted: it is a one-list tax at authoring time, paid instead of an unbounded drift-hunt later, and it forces the "who restates this?" question at the only moment the author reliably knows the answer.
 
 ## Alternatives Considered
 
