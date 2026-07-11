@@ -86,9 +86,22 @@ the classifier, `classifier/ADR-007`; extending to `kb-agent` is Next).
   hardening. **The real hole** — the system has an exposed agent tool seam and no documented
   threat model.
 - **MCP (Model Context Protocol) & interop** — the emerging standard for exactly the tool/context
-  seam `SYS-003` solves with HTTP + `projects.yaml` today. Named here as a learning target and a
-  candidate future ADR (*MCP-ify the kb-agent seam*) — **not** a claim of current MCP experience;
-  the system uses HTTP seams now.
+  seam `SYS-003` solves with HTTP + `projects.yaml` today. **No longer a pure learning target:
+  `kb-agent` now ships a working MCP server**, exposing `search_kb`/`list_projects` over **stdio,
+  consumed directly by an MCP host** (Claude Code invokes it as a local subprocess). Three MCP
+  integration patterns are architecturally distinct, and this doc should be precise about which one
+  is actually implemented:
+  1. **stdio, consumed by an MCP host** — the host spawns the server as a local subprocess and calls
+     it over stdio. **This is what `kb-agent` implements today.**
+  2. **Remote HTTP/SSE via the Messages API `mcp_connector`** — the model reaches a network-reachable
+     MCP server directly. `kb-agent` does **not** support this: the connector requires the server be
+     reachable over HTTP, and a stdio server can't be used this way without being re-exposed.
+  3. **MCP tunnels** — a research-preview, heavyweight infra bridge from a local server up to
+     Anthropic's hosted products. Not something `kb-agent` uses or needs.
+
+  `kb-agent` implements **pattern 1 only**; patterns 2 and 3 remain future options, not current gaps.
+  The candidate future ADR is correspondingly narrower now — *extend the kb-agent MCP seam to a remote
+  transport (pattern 2)* — rather than *MCP-ify the seam from scratch*.
 
 ### What's next in "learning AI" (the learning sequence)
 
@@ -117,8 +130,11 @@ follow-on) so the *delivery* plan and the *learning* plan stay in sync.
 - **It costs living-doc upkeep** (R4). Mitigated: every cluster is tied to a real artifact, the map
   is deliberately thin, and the `engineering/` path + a vocabulary column are scoped as follow-ons,
   not sprawled here.
-- **MCP is a target, not a credential.** Stated plainly so the capstone doesn't overclaim; today's
-  seam is HTTP, and MCP would be a deliberate future migration.
+- **MCP is now demonstrated, not just aspirational.** `kb-agent` ships a working stdio MCP server
+  (pattern 1 — consumed directly by an MCP host), so the capstone can claim *real* MCP experience,
+  scoped honestly to that one pattern. Remote `mcp_connector` (pattern 2) and MCP tunnels (pattern 3)
+  remain deliberate future options, not current gaps — precision here keeps the claim from
+  overreaching in the other direction.
 - **Low foreclosure.** If the "which column did you keep reading?" experiment ever pulls hard toward
   pure-PM and away from eng depth, the substrate framing is revisitable — but until that data lands,
   engineering stays strong, because it's what makes the rest credible.
