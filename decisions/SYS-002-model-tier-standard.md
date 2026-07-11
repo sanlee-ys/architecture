@@ -1,6 +1,6 @@
 # SYS-002: Build on the Anthropic API; default to Sonnet, escalate to Opus only where it pays
 
-**Status:** Accepted — revisit trigger fired 2026-07-11 (Claude Sonnet 5 shipped; see Amendment below — proposal only, pin unchanged)
+**Status:** Accepted — Sonnet 5 migration decided 2026-07-11 (see Resolution below); workhorse pin updated
 **Date:** 2026-06-21
 **Deciders:** San Lee
 
@@ -29,17 +29,22 @@ Current Anthropic lineup and pricing (per 1M tokens, input / output) at time of 
 | Tier | Model ID | Input | Output | vs. Sonnet |
 |------|----------|-------|--------|------------|
 | Cheap | `claude-haiku-4-5` | $1 | $5 | ~0.33× |
-| **Workhorse** | `claude-sonnet-4-6` | $3 | $15 | 1× |
+| **Workhorse** | `claude-sonnet-5` | $3 | $15 (intro $2/$10 through 2026-08-31) | 1× |
 | Escalation | `claude-opus-4-8` | $5 | $25 | ~1.7× |
 | Top (rare) | `claude-fable-5` | $10 | $50 | ~3.3× |
+
+> Table updated 2026-07-11 per the Resolution below. `claude-sonnet-4-6` remains pinned
+> separately for `defense-news-classifier`'s RAG-grounded path only — see Resolution and
+> Downstream surfaces.
 
 ## Decision
 
 A cross-project **model-tier standard**:
 
 - **Provider:** the Anthropic API across all AI projects.
-- **Default workhorse:** `claude-sonnet-4-6` — strong instruction-following and tool use at
-  the best cost/quality balance for these workloads.
+- **Default workhorse:** `claude-sonnet-5` — strong instruction-following and tool use at
+  the best cost/quality balance for these workloads. (`claude-sonnet-4-6` was the workhorse
+  from 2026-06-21 to 2026-07-11; see Resolution for the migration and its one carve-out.)
 - **Escalation tier:** `claude-opus-4-8`, used **only where an eval shows the quality gain
   pays** — e.g. low-confidence / boundary cases (the industry-vs-procurement edge), or as an
   **LLM judge** for grading real (non-synthetic) v2 data where an AI-made answer key no longer
@@ -213,3 +218,63 @@ open proposal. The `## Decision` section's pinned `claude-sonnet-4-6` string is 
 These findings do not change the recommendation in the amendment above (evaluate before committing the
 pin change); they make the migration's actual code-level cost concrete. The pin change itself still
 awaits San's sign-off and an eval-backed before/after, per the proposal above.
+
+## Resolution (2026-07-11) — Sonnet 5 adopted as workhorse; RAG path decoupled
+
+San approved running the eval-backed migration proposed above. The verdict itself — migrate or
+not — was rendered by a dedicated `claude-fable-5` call, given only the measured facts below and
+isolated from the agents that produced them, per this ADR's own "measure first" principle applied
+to the decision process itself, not just the eval.
+
+**Verdict: migrate now, with the RAG path explicitly decoupled rather than dragged along.**
+
+### What the eval actually showed (n=54 gold set, `defense-news-classifier`)
+
+| Metric | `claude-sonnet-4-6` | `claude-sonnet-5` | Delta |
+|---|---|---|---|
+| Category accuracy | 88.9% | 88.9% | 0.0 |
+| Domain accuracy | 88.9% | **94.4%** | **+5.5pp** |
+| Domain macro-F1 | 0.894 | 0.947 | +0.053 |
+
+Stability (900 calls, no forced determinism — Sonnet 5 rejects `temperature`): label consistency
+99.0% (category) / 99.7% (domain) — a *better* determinism story than the removed `temperature=0`
+knob, because it's measured rather than assumed. Real token inflation, measured via `count_tokens`
+rather than estimated: **+7% input / +13% output**, well below the ~30% generic tokenizer estimate
+in the addendum above — caching absorbs most of it since the cacheable prefix only grew +2.2%.
+Zero refusals across ~1,000 live calls. The `effort` risk named in the addendum turned out to be
+moot for this call shape specifically: `classify()` forces `tool_choice`, so the model never enters
+a thinking phase regardless of `effort` — confirmed empirically across 4 configurations.
+
+### The regression that shaped the decision
+
+Migrating the shared model constant transitively moved `classify_rag.py` (BM25-grounded
+classification) to Sonnet 5 too, and grounded domain accuracy dropped from the new 94.4% ungrounded
+baseline to 85.2% — a −9.3% delta, reproduced 3×, against a −3% gate floor. Category grounding was
+unaffected (still passes).
+
+The Fable verdict's read, adopted here: **this is not evidence Sonnet 5 is worse — it's evidence
+the ungrounded baseline got good enough that BM25 grounding flipped from signal to noise for the
+domain field specifically.** That is a real, separate design question about the RAG feature's value
+proposition at this model tier, not a defect in the workhorse migration, so it was decoupled rather
+than allowed to block the merge.
+
+### What shipped
+
+- **`defense-news-classifier`**: workhorse → `claude-sonnet-5` ([#64](https://github.com/sanlee-ys/defense-news-classifier/pull/64), [#69](https://github.com/sanlee-ys/defense-news-classifier/pull/69)). `classify_rag.py` given its own `RAG_MODEL` constant, pinned to `claude-sonnet-4-6`, with a frozen baseline fixture so the RAG gate's grounded-vs-ungrounded comparison stays apples-to-apples, and a regression test locking the pin. Full rationale and the follow-up candidate fixes: `defense-news-classifier/decisions/010-rag-path-model-pin.md`.
+- **`kb-agent`**: pinned model → `claude-sonnet-5` ([#36](https://github.com/sanlee-ys/kb-agent/pull/36)). No sampling parameters existed to break; the hand-rolled tool-use loop was verified safe under adaptive-thinking-on-by-default (it already replays full assistant content across turns and branches on `stop_reason`, unaffected either way).
+
+### Downstream surfaces
+
+- **`defense-news-classifier`'s RAG path is a deliberate, transitional two-model split, not a
+  permanent quiet fork.** ADR-010 (repo-local) names the follow-up decision explicitly: drop BM25
+  grounding for the domain field on Sonnet 5 specifically (category grounding still passes) or
+  re-tune retrieval/thresholds against the new, stronger baseline. This SYS-002 resolution does not
+  make that call — it only records that the split exists and why, so it can't silently calcify into
+  permanent architecture nobody decided on. Revisit when that follow-up is scoped.
+- **Judge model unchanged.** `claude-opus-4-8` continues as the LLM-judge tier for both repos —
+  this migration only touched the workhorse tier.
+- **`kb-agent`'s generated KB stub** (`kb/projects/defense-news-classifier.md`) still describes the
+  classifier's model as `claude-sonnet-4-6` as of this resolution — it's regenerated by
+  `scripts/ingest.py`, not hand-edited, so it will pick up the new pin on next ingest rather than
+  needing a manual sweep. Flagged here so it isn't mistaken for a missed reference if seen stale
+  in the meantime.
