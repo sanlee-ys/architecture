@@ -167,3 +167,49 @@ to migrate. Recommendation, offered as a starting point for San to approve, amen
 result, (c) if swapping, update the pinned model string in this ADR's Decision section and open
 the corresponding PRs in `defense-news-classifier` and `kb-agent` with re-baselined eval
 thresholds. None of that follow-up work is done by this amendment.
+
+## Addendum (2026-07-11) — implementation-level findings from reading the classifier source
+
+The amendment above was written from Anthropic's release notes. This addendum records concrete,
+code-level facts surfaced by directly reading `defense-news-classifier`'s source (and cross-checking
+against Anthropic's classification use-case guide). It sharpens what "swapping the pin is not a
+drop-in replacement" means in practice. **Same status as the amendment: additive documentation of an
+open proposal. The `## Decision` section's pinned `claude-sonnet-4-6` string is unchanged.**
+
+- **`temperature=0.0` is an actual breaking line, not a hypothetical.** `test_classify.py` and
+  `stability.py` both call the API with `temperature=0.0` for determinism. Sonnet 5 (and Opus 4.7+)
+  reject any non-default sampling parameter with an **HTTP 400** — so these are literal lines of code
+  that fail on migration, not just a behavioral risk. `strict: true` already guarantees schema-valid
+  output regardless of sampling, so determinism testing would need to shift to an empirical
+  stability check (run N times, compare label agreement) rather than forcing it via temperature.
+
+- **`effort` is the real replacement lever for the removed thinking budget.** Neither `classify.py`
+  nor `gold_eval.py` sets `effort` today. On migration, both would silently inherit
+  adaptive-thinking-**on**-by-default, rather than today's no-thinking-by-omission behavior — a
+  behavior change, not just an API-surface change. Setting `effort` explicitly (likely `"low"`, for a
+  short forced single-tool classification call) is the lever that recovers intended behavior; without
+  it the migration silently changes how the model reasons on every call.
+
+- **Refusal handling is a new, real branch to add.** Sonnet 5 is the first Sonnet-tier model with
+  real-time cyber safeguards — refusals return `stop_reason: "refusal"` (**HTTP 200, not an error**).
+  A defense-news domain is exactly the kind of content that could trip a false-positive decline that
+  `claude-sonnet-4-6` never risked. A `refusal` branch should exist before cutover (tracked defensively
+  regardless of migration timing) so downstream code doesn't choke on a missing `tool_use` block.
+
+- **No deprecation pressure; the only clock is intro pricing.** `claude-sonnet-4-6` is not retiring
+  before **2027-02-17**, so nothing forces a migration date. The only clock running is the
+  introductory-pricing window (through **2026-08-31**) — and the ~30% tokenizer inflation is only
+  partially offset by that discount if migration happens before the window closes, netting to roughly
+  a wash after it. This reinforces the amendment's "urgency to *decide*, not to *migrate*" framing.
+
+- **The classifier's tool-use is already ahead of the guide; one genuine unexplored technique.** The
+  classifier's `strict: true` tool-use is *more rigorous* than Anthropic's own classification
+  use-case guide (which parses plain XML-tag regex) — nothing to fix there. The one genuine advanced
+  technique the guide uses that the classifier does not is embedding-based retrieval for hard cases
+  (vs. the classifier's BM25). Frame this as a considered tradeoff worth one targeted eval slice, not
+  a defect — Anthropic ships no first-party embeddings model, so adopting it would mean a new Voyage AI
+  dependency, a real architectural change rather than a quick fix.
+
+These findings do not change the recommendation in the amendment above (evaluate before committing the
+pin change); they make the migration's actual code-level cost concrete. The pin change itself still
+awaits San's sign-off and an eval-backed before/after, per the proposal above.
