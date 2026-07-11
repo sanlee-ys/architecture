@@ -73,7 +73,8 @@ The map — five clusters, what each means per track, and **where it already liv
 
 **The keystone is evals.** It's the one cluster that exercises all three hats on a single
 artifact — Eng implements it, Product authors the rubric, Program defends the bar — which is
-exactly why evals-as-CI is already the highest-leverage item in the program roadmap's *Now*.
+exactly why evals-as-CI was the highest-leverage item in the program roadmap (now shipped for
+the classifier, `classifier/ADR-007`; extending to `kb-agent` is Next).
 
 **The genuinely-uncaptured skills** (new since ~2023; absent from the vocabulary doc):
 
@@ -93,7 +94,7 @@ exactly why evals-as-CI is already the highest-leverage item in the program road
 
 Rhymes with the delivery roadmap, but adds the uncaptured ones:
 
-1. **Evals** (keystone, in flight) — finish evals-as-CI with a real golden set + judge.
+1. **Evals** (keystone) — evals-as-CI now has its first pilot: the classifier's real golden set + judge is wired into CI as an enforced gate (`classifier/ADR-007`). Extending the same pattern to `kb-agent`'s own RAG evals is next (program roadmap).
 2. **Observability / OTel** — you can't improve what you can't see; pull it forward from *Later*
    as the next learning frontier.
 3. **Context-engineering depth** — beyond naive RAG: retrieval quality, reranking, memory.
