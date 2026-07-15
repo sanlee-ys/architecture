@@ -22,7 +22,7 @@ drift detection, integration test → eval gate.
 | **Evals & quality bars** *(keystone)* | golden sets, LLM-as-judge, regression gate in CI | classifier eval harness; `SYS-003` eval gate | 🔄 building |
 | **Context engineering** | retrieval, chunk/result caps, grounding | `kb-agent` RAG; `SYS-003` rule 4 | ✅ in use (unnamed) |
 | **Agents & orchestration** | tool design, the tool-use loop, error recovery | `kb-agent` loop; `SYS-003` tool-layer contract | ✅ shipped |
-| **Observability, cost & reliability** | tracing, token/latency/drift, model-tier | OTel (planned); `SYS-002` | ⬜ planned |
+| **Observability, cost & reliability** | tracing, token/latency/drift, model-tier | OTel tracing in `kb-agent` (opt-in, spans per model/tool call); `SYS-002` | 🔄 building |
 | **Security, safety & governance** | prompt injection, tool-exfil surface, output hardening | the `kb-agent` tool seam is the exposure | ⬜ gap |
 
 ## What's next — the learning sequence
@@ -31,7 +31,7 @@ Priority order. It rhymes with the program roadmap and adds the two skills the s
 but never named:
 
 1. **Evals** (keystone, in flight) — finish evals-as-CI: a real golden set + judge, wired to fail a PR.
-2. **Observability / OTel** — pull forward from the program view's *Later*; you can't improve what you can't see.
+2. **Observability / OTel** *(in flight)* — shipped over the `kb-agent` tool-use loop (spans per model/tool call, token + latency attributes, opt-in via `KB_AGENT_TRACING`); extend to `notes-api` / the classifier `/classify` next. You can't improve what you can't see.
 3. **Context-engineering depth** — past naive RAG: retrieval quality, reranking, memory.
 4. **AI security** — a threat model for the agent tool seam (today's hole).
 5. **MCP / interop** *(stretch)* — candidate future ADR: MCP-ify the `SYS-003` HTTP seam. A learning target, not current practice.

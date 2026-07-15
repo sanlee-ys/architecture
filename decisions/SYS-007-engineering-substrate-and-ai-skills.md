@@ -68,7 +68,7 @@ The map — five clusters, what each means per track, and **where it already liv
 | **Evals & quality bars** *(keystone)* | Golden sets, LLM-as-judge, regression gates in CI | Own the org-wide "good enough to ship" bar | Author the rubric — *what* "good" means | classifier eval (v2: 88.9% / 88.9%; v1 was 97.3% / ~79%); `SYS-003` eval gate; evals-as-CI (R6) |
 | **Context engineering & memory** | Window budgeting, retrieval, chunk/result caps | Plan context/data dependencies across teams | System prompt + memory as a versioned surface | `kb-agent` RAG; `SYS-003` rule 4 (context-budget discipline) |
 | **Agents & orchestration** | Tool design, workflows-vs-agents, retries, HITL | Manage nondeterministic delivery (confidence, not dates) | Design for the failure case; trust & correction UX | `kb-agent` manual tool-use loop; `SYS-003` tool-layer contract |
-| **Observability, cost & reliability** | Tracing across agent steps, token/latency/drift | Capacity & inference unit-economics planning | Latency↔quality, cost-per-query as product calls | OTel (roadmap, Later); `SYS-002` model-tier; R7 |
+| **Observability, cost & reliability** | Tracing across agent steps, token/latency/drift | Capacity & inference unit-economics planning | Latency↔quality, cost-per-query as product calls | **OTel tracing shipped in `kb-agent`** (opt-in, spans per model/tool call w/ token+latency attrs — see Addendum 2026-07-15); `SYS-002` model-tier; R7 |
 | **Security, safety & governance** | Prompt injection, tool-exfiltration surface, output hardening | Responsible-AI review gates, launch risk | Transparency, uncertainty, kill-switches in UX | **Gap — nothing yet** (the `kb-agent` tool seam is the exposure) |
 
 **The keystone is evals.** It's the one cluster that exercises all three hats on a single
@@ -80,8 +80,9 @@ the classifier, `classifier/ADR-007`; extending to `kb-agent` is Next).
 
 - **Context engineering** — the successor to "prompt engineering"; the system does it (`SYS-003`
   rule 4) but never names it.
-- **AI observability** — tracing/cost/drift for nondeterministic systems; on the roadmap as OTel,
-  but not yet framed as a *skill*.
+- **AI observability** — tracing/cost/drift for nondeterministic systems. **First one shipped
+  2026-07-15**: OpenTelemetry tracing over the `kb-agent` tool-use loop (see Addendum). Named as a
+  skill now, not just a roadmap line; extending it across the HTTP services is what remains.
 - **AI security & governance** — prompt injection, the tool/HTTP exfiltration surface, output
   hardening. **The real hole** — the system has an exposed agent tool seam and no documented
   threat model.
@@ -108,8 +109,9 @@ the classifier, `classifier/ADR-007`; extending to `kb-agent` is Next).
 Rhymes with the delivery roadmap, but adds the uncaptured ones:
 
 1. **Evals** (keystone) — evals-as-CI now has its first pilot: the classifier's real golden set + judge is wired into CI as an enforced gate (`classifier/ADR-007`). Extending the same pattern to `kb-agent`'s own RAG evals is next (program roadmap).
-2. **Observability / OTel** — you can't improve what you can't see; pull it forward from *Later*
-   as the next learning frontier.
+2. **Observability / OTel** — you can't improve what you can't see. **In flight: shipped over the
+   `kb-agent` tool-use loop 2026-07-15** (spans per model/tool call, token + latency attributes);
+   extending it to `notes-api` and the classifier `/classify` API is the remaining step.
 3. **Context-engineering depth** — beyond naive RAG: retrieval quality, reranking, memory.
 4. **AI security** — close the hole: a threat model for the agent tool seam.
 
@@ -148,3 +150,26 @@ follow-on) so the *delivery* plan and the *learning* plan stay in sync.
 | Put the AI-skill map in `learning-notes` | learning-notes is plain-language *concept* explainers (what RAG *is*); this is a cross-repo *career-framing decision with alternatives* — ADR-shaped, so it belongs in the system log (the same tier logic as `SYS-001`) |
 | Ship one big "AI skills" checklist | Becomes planning theater (R4) — a hollow list that drifts from delivery; instead, a small set of clusters mapped to real artifacts, with "what's next" tied to the live roadmap |
 | Fold engineering into the existing vocabulary doc only | That doc is a *terms decoder*, not a track home; engineering needs both a path dir (parity with the P-tracks) and its framing recorded as a decision — the vocab doc grows an engineering column as follow-on |
+
+## Addendum — 2026-07-15: the observability cluster ships its first artifact
+
+The **Observability, cost & reliability** cluster was the one marked "OTel (roadmap, Later)" at
+decision time — built by the system (a model-tier standard, retries) but never *traced*. It now has
+its first real artifact: **OpenTelemetry tracing over the `kb-agent` tool-use loop**
+([kb-agent PR #39](https://github.com/sanlee-ys/kb-agent/pull/39)).
+
+What shipped, and why it's the honest version of "closing" this gap:
+
+- One `KBAgent.ask()` emits a span tree — `kb_agent.ask` → `chat <model>` (one per model call) →
+  `execute_tool <name>` (one per tool call) — carrying OpenTelemetry **GenAI semantic-convention**
+  attributes: `gen_ai.usage.{input,output,cache_read,cache_creation}_tokens`, per-tool latency (span
+  duration) and the SYS-003 `status`, and the per-turn loop-pass count. This is precisely the
+  "tracing across agent steps, token/latency/drift" the cluster named.
+- **Opt-in, zero-overhead-when-off**: instrumented against the OTel *API* (no-op by default), the SDK
+  configured only when `KB_AGENT_TRACING` is set. It doesn't tax the normal run or the offline suite.
+
+**Status is `🔄 building`, not `✅ done`, on purpose.** The tool-use loop is instrumented; the two
+HTTP services (`notes-api`, the classifier `/classify`) are not yet. The program view's *Later* item
+("OTel observability across `notes-api` + `kb-agent`") accordingly narrows to the HTTP-service half.
+The learning-sequence entry above moves from "pull it forward" to "in flight." The **AI security &
+governance** cluster remains the one true `⬜ gap`.
