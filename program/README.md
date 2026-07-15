@@ -65,7 +65,7 @@ to a durable task queue is the remaining reliability step. Everything else is cr
 - **[classifier]** `v2.2.0` tiered model routing (escalate only low-confidence boundary cases), then `v3.0.0` add a `region` field (a breaking schema change).
 - **[classifier]** **Loop demo rung 2**: an agent-driven ML loop (a tiny AutoML) where an outer agentic loop wraps a classical TF-IDF + logreg baseline and does error-driven feature engineering against the LLM. Consumes the parked classical-ML bake-off.
 - **[notes-api]** Phase 1 containerize + local K8s; Phase 2 a durable task queue (Celery + Redis or outbox) if the reliability SLA tightens beyond best-effort BackgroundTasks.
-- **[cross-cutting]** OTel observability across `notes-api` + `kb-agent`.
+- **[cross-cutting]** OTel observability: **shipped over the `kb-agent` tool-use loop** (opt-in, spans per model/tool call with token + latency attributes); extend it to `notes-api` + the classifier `/classify` API.
 - **[ops]** Operational-maturity track: Linux, ssh, health checks ("can I operate what I built?").
 - **[non-goal]** Other verticals (banking, etc.) — written down as a direction, not shipped.
 
