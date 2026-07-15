@@ -68,7 +68,7 @@ The map — five clusters, what each means per track, and **where it already liv
 | **Evals & quality bars** *(keystone)* | Golden sets, LLM-as-judge, regression gates in CI | Own the org-wide "good enough to ship" bar | Author the rubric — *what* "good" means | classifier eval (v2: 88.9% / 88.9%; v1 was 97.3% / ~79%); `SYS-003` eval gate; evals-as-CI (R6) |
 | **Context engineering & memory** | Window budgeting, retrieval, chunk/result caps | Plan context/data dependencies across teams | System prompt + memory as a versioned surface | `kb-agent` RAG; `SYS-003` rule 4 (context-budget discipline) |
 | **Agents & orchestration** | Tool design, workflows-vs-agents, retries, HITL | Manage nondeterministic delivery (confidence, not dates) | Design for the failure case; trust & correction UX | `kb-agent` manual tool-use loop; `SYS-003` tool-layer contract |
-| **Observability, cost & reliability** | Tracing across agent steps, token/latency/drift | Capacity & inference unit-economics planning | Latency↔quality, cost-per-query as product calls | **OTel tracing shipped in `kb-agent`** (opt-in, spans per model/tool call w/ token+latency attrs — see Addendum 2026-07-15); `SYS-002` model-tier; R7 |
+| **Observability, cost & reliability** | Tracing across agent steps, token/latency/drift | Capacity & inference unit-economics planning | Latency↔quality, cost-per-query as product calls | **OTel tracing shipped across all three services** — `kb-agent` loop, classifier `/classify`, `notes-api` enrichment seam (opt-in, GenAI/HTTP semconv — see Addenda); `SYS-002` model-tier; R7. Drift detection over the traces is the remaining leg |
 | **Security, safety & governance** | Prompt injection, tool-exfiltration surface, output hardening | Responsible-AI review gates, launch risk | Transparency, uncertainty, kill-switches in UX | **Gap — nothing yet** (the `kb-agent` tool seam is the exposure) |
 
 **The keystone is evals.** It's the one cluster that exercises all three hats on a single
@@ -80,9 +80,10 @@ the classifier, `classifier/ADR-007`; extending to `kb-agent` is Next).
 
 - **Context engineering** — the successor to "prompt engineering"; the system does it (`SYS-003`
   rule 4) but never names it.
-- **AI observability** — tracing/cost/drift for nondeterministic systems. **First one shipped
-  2026-07-15**: OpenTelemetry tracing over the `kb-agent` tool-use loop (see Addendum). Named as a
-  skill now, not just a roadmap line; extending it across the HTTP services is what remains.
+- **AI observability** — tracing/cost/drift for nondeterministic systems. **Shipped across the
+  system 2026-07-15**: OpenTelemetry tracing over the `kb-agent` tool-use loop, the classifier
+  `/classify` LLM call, and the `notes-api` enrichment seam (see Addenda). A named, exercised skill
+  now, not a roadmap line; drift detection over the emitted traces is the remaining refinement.
 - **AI security & governance** — prompt injection, the tool/HTTP exfiltration surface, output
   hardening. **The real hole** — the system has an exposed agent tool seam and no documented
   threat model.
@@ -109,9 +110,9 @@ the classifier, `classifier/ADR-007`; extending to `kb-agent` is Next).
 Rhymes with the delivery roadmap, but adds the uncaptured ones:
 
 1. **Evals** (keystone) — evals-as-CI now has its first pilot: the classifier's real golden set + judge is wired into CI as an enforced gate (`classifier/ADR-007`). Extending the same pattern to `kb-agent`'s own RAG evals is next (program roadmap).
-2. **Observability / OTel** — you can't improve what you can't see. **In flight: shipped over the
-   `kb-agent` tool-use loop 2026-07-15** (spans per model/tool call, token + latency attributes);
-   extending it to `notes-api` and the classifier `/classify` API is the remaining step.
+2. **Observability / OTel** — you can't improve what you can't see. **Shipped 2026-07-15** across
+   all three services (`kb-agent` loop, classifier `/classify`, `notes-api` enrichment seam),
+   opt-in per service with GenAI/HTTP semconv attributes. Drift detection over the traces is next.
 3. **Context-engineering depth** — beyond naive RAG: retrieval quality, reranking, memory.
 4. **AI security** — close the hole: a threat model for the agent tool seam.
 
@@ -173,3 +174,22 @@ HTTP services (`notes-api`, the classifier `/classify`) are not yet. The program
 ("OTel observability across `notes-api` + `kb-agent`") accordingly narrows to the HTTP-service half.
 The learning-sequence entry above moves from "pull it forward" to "in flight." The **AI security &
 governance** cluster remains the one true `⬜ gap`.
+
+## Addendum — 2026-07-15 (later): tracing completed across all three services
+
+The `🔄 building` above is now `✅ done` for the **tracing** leg of the cluster. The same pattern
+shipped to both HTTP services, so the whole system is traced:
+
+- **Classifier `/classify`** ([PR #76](https://github.com/sanlee-ys/defense-news-classifier/pull/76)) —
+  `classify()` wraps its LLM call in a `chat <model>` span with GenAI-semconv token attributes and the
+  resulting `{category, operational_domain}`. Opt-in via `CLASSIFIER_TRACING`; a no-op on the eval hot
+  path so hundreds of calls per optimize iteration pay nothing.
+- **`notes-api` enrichment seam** ([PR #34](https://github.com/sanlee-ys/notes-api/pull/34)) —
+  `classify_and_writeback()` emits a `classify_and_writeback` task span with a child `POST /classify`
+  span per HTTP attempt (HTTP semconv + `error.type`), so the cross-service hop and its retries are
+  visible. Opt-in via `NOTES_API_TRACING`.
+
+All three use the identical design — instrument against the OTel API always, configure the recording
+SDK only behind a per-service env var, console exporter by default, OTLP as an optional extra — so the
+services share one observability language. **What remains in the cluster is drift detection** over the
+emitted traces (a refinement, not a gap), and **AI security & governance stays the one true `⬜ gap`.**
