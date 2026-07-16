@@ -23,7 +23,7 @@ drift detection, integration test → eval gate.
 | **Context engineering** | retrieval, chunk/result caps, grounding | `kb-agent` RAG; `SYS-003` rule 4 | ✅ in use (unnamed) |
 | **Agents & orchestration** | tool design, the tool-use loop, error recovery | `kb-agent` loop; `SYS-003` tool-layer contract | ✅ shipped |
 | **Observability, cost & reliability** | tracing, token/latency/drift, model-tier | OTel tracing across `kb-agent`, classifier `/classify`, `notes-api` (opt-in); `SYS-002` | ✅ tracing shipped |
-| **Security, safety & governance** | prompt injection, tool-exfil surface, output hardening | the `kb-agent` tool seam is the exposure | ⬜ gap |
+| **Security, safety & governance** | prompt injection, tool-exfil surface, output hardening | threat model of the `kb-agent` tool seam as a regulated deploy (`SYS-016`); `SYS-010` posture | 📝 threat model documented |
 
 ## What's next — the learning sequence
 
@@ -33,7 +33,7 @@ but never named:
 1. **Evals** (keystone, in flight) — finish evals-as-CI: a real golden set + judge, wired to fail a PR.
 2. **Observability / OTel** *(shipped)* — OTel tracing across all three services (`kb-agent` loop, classifier `/classify`, `notes-api` enrichment seam), opt-in per service with GenAI/HTTP semconv attributes. Drift detection over the traces is the remaining refinement. You can't improve what you can't see.
 3. **Context-engineering depth** — past naive RAG: retrieval quality, reranking, memory.
-4. **AI security** — a threat model for the agent tool seam (today's hole).
+4. **AI security** *(threat model documented)* — the agent tool seam is modeled as a regulated deployment (`SYS-016`); building its tenancy + audit controls is the next step a real deployment would take.
 5. **MCP / interop** *(stretch)* — candidate future ADR: MCP-ify the `SYS-003` HTTP seam. A learning target, not current practice.
 
 ## Cross-repo engineering standards
