@@ -69,7 +69,7 @@ The map — five clusters, what each means per track, and **where it already liv
 | **Context engineering & memory** | Window budgeting, retrieval, chunk/result caps | Plan context/data dependencies across teams | System prompt + memory as a versioned surface | `kb-agent` RAG; `SYS-003` rule 4 (context-budget discipline) |
 | **Agents & orchestration** | Tool design, workflows-vs-agents, retries, HITL | Manage nondeterministic delivery (confidence, not dates) | Design for the failure case; trust & correction UX | `kb-agent` manual tool-use loop; `SYS-003` tool-layer contract |
 | **Observability, cost & reliability** | Tracing across agent steps, token/latency/drift | Capacity & inference unit-economics planning | Latency↔quality, cost-per-query as product calls | **OTel tracing shipped across all three services** — `kb-agent` loop, classifier `/classify`, `notes-api` enrichment seam (opt-in, GenAI/HTTP semconv — see Addenda); `SYS-002` model-tier; R7. Drift detection over the traces is the remaining leg |
-| **Security, safety & governance** | Prompt injection, tool-exfiltration surface, output hardening | Responsible-AI review gates, launch risk | Transparency, uncertainty, kill-switches in UX | **Gap — nothing yet** (the `kb-agent` tool seam is the exposure) |
+| **Security, safety & governance** | Prompt injection, tool-exfiltration surface, output hardening | Responsible-AI review gates, launch risk | Transparency, uncertainty, kill-switches in UX | **Threat model documented** ([`SYS-016`](SYS-016-agent-tool-seam-threat-model.md), 2026-07-15) — the tool seam modeled as a regulated deployment; the tenancy + audit controls it names are roadmapped, not built |
 
 **The keystone is evals.** It's the one cluster that exercises all three hats on a single
 artifact — Eng implements it, Product authors the rubric, Program defends the bar — which is
@@ -85,8 +85,10 @@ the classifier, `classifier/ADR-007`; extending to `kb-agent` is Next).
   `/classify` LLM call, and the `notes-api` enrichment seam (see Addenda). A named, exercised skill
   now, not a roadmap line; drift detection over the emitted traces is the remaining refinement.
 - **AI security & governance** — prompt injection, the tool/HTTP exfiltration surface, output
-  hardening. **The real hole** — the system has an exposed agent tool seam and no documented
-  threat model.
+  hardening. **Threat model now documented** ([`SYS-016`](SYS-016-agent-tool-seam-threat-model.md),
+  2026-07-15): the agent tool seam modeled as a regulated deployment, crediting the `SYS-010`
+  controls already in place and separating them from the tenancy + audit controls such a deploy
+  would still need. The *documentation* hole is closed; those controls remain a roadmap, not a build.
 - **MCP (Model Context Protocol) & interop** — the emerging standard for exactly the tool/context
   seam `SYS-003` solves with HTTP + `projects.yaml` today. **No longer a pure learning target:
   `kb-agent` now ships a working MCP server**, exposing `search_kb`/`list_projects` over **stdio,
@@ -114,7 +116,9 @@ Rhymes with the delivery roadmap, but adds the uncaptured ones:
    all three services (`kb-agent` loop, classifier `/classify`, `notes-api` enrichment seam),
    opt-in per service with GenAI/HTTP semconv attributes. Drift detection over the traces is next.
 3. **Context-engineering depth** — beyond naive RAG: retrieval quality, reranking, memory.
-4. **AI security** — close the hole: a threat model for the agent tool seam.
+4. **AI security** *(threat model shipped)* — the threat model for the agent tool seam is
+   documented ([`SYS-016`](SYS-016-agent-tool-seam-threat-model.md)); building its tenancy +
+   audit controls is what a real regulated deployment would pick up next.
 
 These four should be reflected back into the program view's Now/Next/Later (a `program/` edit,
 follow-on) so the *delivery* plan and the *learning* plan stay in sync.
@@ -172,8 +176,9 @@ What shipped, and why it's the honest version of "closing" this gap:
 **Status is `🔄 building`, not `✅ done`, on purpose.** The tool-use loop is instrumented; the two
 HTTP services (`notes-api`, the classifier `/classify`) are not yet. The program view's *Later* item
 ("OTel observability across `notes-api` + `kb-agent`") accordingly narrows to the HTTP-service half.
-The learning-sequence entry above moves from "pull it forward" to "in flight." The **AI security &
-governance** cluster remains the one true `⬜ gap`.
+The learning-sequence entry above moves from "pull it forward" to "in flight." (At the time of this
+addendum the **AI security & governance** cluster was the one remaining `⬜ gap`; its threat model was
+subsequently documented in [`SYS-016`](SYS-016-agent-tool-seam-threat-model.md) — see the next addendum.)
 
 ## Addendum — 2026-07-15 (later): tracing completed across all three services
 
@@ -192,4 +197,17 @@ shipped to both HTTP services, so the whole system is traced:
 All three use the identical design — instrument against the OTel API always, configure the recording
 SDK only behind a per-service env var, console exporter by default, OTLP as an optional extra — so the
 services share one observability language. **What remains in the cluster is drift detection** over the
-emitted traces (a refinement, not a gap), and **AI security & governance stays the one true `⬜ gap`.**
+emitted traces (a refinement, not a gap), and **AI security & governance** was, at that point, the one
+remaining `⬜ gap`.
+
+## Addendum — 2026-07-15 (later still): the security cluster's threat model is documented
+
+The last `⬜ gap` — **AI security & governance** — now has its documented artifact:
+[`SYS-016`](SYS-016-agent-tool-seam-threat-model.md), a threat model for the agent tool seam written
+as a *regulated-deployment* design exercise (OWASP-LLM-Top-10 + STRIDE, grounded in the real
+`kb-agent` tool code). It credits the `SYS-010` controls already in place for six of eight threats
+and isolates the two that only exist at the regulated boundary — **multi-tenant data isolation** and
+**auditable access** — as a controls roadmap, with the `SYS-007` traces already named as the audit
+substrate. Honest marker: the cluster moves from `⬜ gap` to **threat model documented; controls
+roadmapped**, *not* `✅ done` — a documented threat model closes "no threat model," not "the controls
+are built." With that, every cluster on the map is at least `🔄`; none is a bare `⬜`.
