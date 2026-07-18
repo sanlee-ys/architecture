@@ -67,10 +67,14 @@ never ambiguous.
 | [SYS-013](decisions/SYS-013-self-healing-by-default.md) | Design services to self-heal — detect and recover before a human has to | Accepted |
 | [SYS-014](decisions/SYS-014-python-docstring-standard.md) | Google-style docstrings as the Python docstring standard | Accepted |
 | [SYS-015](decisions/SYS-015-public-claude-ops-repo.md) | Publish the Claude operating layer as a public repo (claude-ops) | Accepted |
+| [SYS-016](decisions/SYS-016-agent-tool-seam-threat-model.md) | Threat model for the agent tool seam — as a regulated deployment | Accepted |
+| [SYS-017](decisions/SYS-017-evals-as-ci.md) | Make evals-as-CI a system-wide pattern, gated on corpus provenance | Proposed |
 
 ## Writing a new ADR
 
 1. Copy [`TEMPLATE.md`](TEMPLATE.md) to `decisions/SYS-00N-short-title.md` (next number).
-2. Fill in **Context → Decision → Consequences → Alternatives Considered**.
+2. Fill in **Context → Decision → Downstream surfaces → Consequences → Alternatives Considered**.
+   `Downstream surfaces` is mandatory per [`TEMPLATE.md`](TEMPLATE.md) and `SYS-009` — "None" is a
+   valid answer but must be written.
 3. Set the status — `Proposed` until it's actually adopted, then `Accepted`.
 4. Add a row to the log table above.

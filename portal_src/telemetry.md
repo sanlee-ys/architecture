@@ -10,4 +10,4 @@ What will live here:
 
 - **Service health & traces** (OpenTelemetry) once `kb-agent` or `notes-api` is deployed.
 - **Test coverage** — `notes-api` already produces `pytest-cov` (coverage.py) reports.
-- **Eval / quality gates** — the classifier's eval harness; evals-as-CI (`SYS-007`, the keystone).
+- **Eval / quality gates** — the classifier's eval harness; evals-as-CI (`SYS-017`, the keystone).
