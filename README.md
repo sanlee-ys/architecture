@@ -60,7 +60,7 @@ never ambiguous.
 | [SYS-006](decisions/SYS-006-notes-read-contract.md) | Freeze the GET /notes read contract between kb-agent and notes-api | Accepted |
 | [SYS-007](decisions/SYS-007-engineering-substrate-and-ai-skills.md) | Engineering is the substrate of the product & program tracks; an AI-skill map across all three | Accepted |
 | [SYS-008](decisions/SYS-008-documentation-portal.md) | A generated documentation portal — one browsable view over the whole system | Accepted |
-| [SYS-009](decisions/SYS-009-documentation-cascade.md) | Cascade documentation by altitude — one body of work, a distinct artifact per surface | Proposed |
+| [SYS-009](decisions/SYS-009-documentation-cascade.md) | Cascade documentation by altitude — one body of work, a distinct artifact per surface | Accepted |
 | [SYS-010](decisions/SYS-010-security-posture.md) | Security posture — the local-service trust model and house security rules | Accepted |
 | [SYS-011](decisions/SYS-011-generated-roadmap-dashboard.md) | A generated roadmap dashboard — the whole system's status at a glance | Accepted |
 | [SYS-012](decisions/SYS-012-pages-actions-deployment.md) | GitHub Pages — deploy via Actions, not the legacy branch build | Accepted |
@@ -72,9 +72,16 @@ never ambiguous.
 
 ## Writing a new ADR
 
+0. **Check it earns a number.** Per [`SYS-001`](decisions/SYS-001-record-architecture-decisions.md)'s
+   promotion bar, a `SYS` entry must both **cross repo boundaries** and **foreclose something** — a
+   real alternative existed and this closed it off. Crossing repos alone makes it a *convention*,
+   which belongs in the house conventions doc or the binding repo's `CLAUDE.md`, not here.
 1. Copy [`TEMPLATE.md`](TEMPLATE.md) to `decisions/SYS-00N-short-title.md` (next number).
 2. Fill in **Context → Decision → Downstream surfaces → Consequences → Alternatives Considered**.
    `Downstream surfaces` is mandatory per [`TEMPLATE.md`](TEMPLATE.md) and `SYS-009` — "None" is a
    valid answer but must be written.
 3. Set the status — `Proposed` until it's actually adopted, then `Accepted`.
-4. Add a row to the log table above.
+4. Add a row to the log table above — and keep its **Status cell in sync with the document's own
+   header** on every later status change. The two drifting apart is not cosmetic: `SYS-009` read
+   `Proposed` in this table from 2026-06-29 to 2026-07-18 while the document itself said
+   `Accepted`, and `SYS-016` was cited from two docs without ever having a row here.
