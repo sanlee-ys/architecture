@@ -21,7 +21,7 @@ something a linter can hold, not converting between styles.
 Two things the survey pinned down that shape the decision:
 
 - **No repo publishes API docs.** Nothing runs Sphinx or `mkdocstrings` — the
-  portal (`SYS-008`) aggregates hand-written Markdown, it does not render
+  portal (`architecture/ADR-001`) aggregates hand-written Markdown, it does not render
   docstrings. So the value of a docstring here is **IDE hover-readability and
   lint-enforceability**, not generating a documentation site. That kills the
   one argument for reST (it only pays off under Sphinx).

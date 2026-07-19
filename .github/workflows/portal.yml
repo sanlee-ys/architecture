@@ -1,4 +1,4 @@
-# Build the system portal (SYS-008) and deploy it to GitHub Pages.
+# Build the system portal (architecture/ADR-001, formerly SYS-008) and deploy it to GitHub Pages.
 #
 # The portal aggregates docs from several public sibling repos, so the build clones
 # them next to this one and runs scripts/build_portal.py — the SAME assembler used

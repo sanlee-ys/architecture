@@ -3,6 +3,11 @@
 Repo-local decision records for the **`architecture` repo itself** — the portal build, the
 dashboard generator, the deployment wiring, and anything else that binds only this repo.
 
+| # | Title | Status |
+|---|-------|--------|
+| [ADR-001](ADR-001-documentation-portal.md) | A generated documentation portal — one browsable view over the whole system | Accepted (re-tiered from `SYS-008`) |
+| [ADR-002](ADR-002-generated-roadmap-dashboard.md) | A generated roadmap dashboard — the whole system's status at a glance | Accepted (re-tiered from `SYS-011`) |
+
 ## Why this exists
 
 [`SYS-001`](../decisions/SYS-001-record-architecture-decisions.md) defines a two-tier practice:
@@ -41,11 +46,26 @@ the repo the floor it was missing, so the next build decision lands here instead
 - Cross-tier references are prefixed so a number is never ambiguous: `system/SYS-004`,
   `architecture/ADR-001`, `classifier/ADR-012`
 
-## Existing SYS entries are not being moved
+## SYS-008 and SYS-011 did move, after all
 
-`SYS-008` and `SYS-011` stay where they are. `SYS-001`'s non-retroactivity clause forbids
-demoting them, and the citation cost is real — `SYS-008` alone carries 26 inbound references,
-21 of them on public surfaces, and one published knowledge-graph eval records the edge
-"SYS-011 depends on SYS-008" as a verified result. Renumbering to satisfy a rule written after
-them would break more than it fixes. This tier changes what happens **next**, which is the only
-thing it can change cheaply.
+An earlier version of this file said they would stay, citing `SYS-001`'s non-retroactivity
+clause and a large citation cost. Both parts turned out to be wrong, and the correction is
+worth keeping visible.
+
+**The clause was never the owner's position.** He had authorized amending it before the audit
+ran; the instruction reached the clustering step but not the adversarial reviewers, who then
+killed all five proposed demotions on a procedural ground that had already been waived. A
+merits-only re-run moved three of the five.
+
+**The citation cost was inflated.** The headline "~26 inbound / ~21 public" for `SYS-008`
+counted `site/**`, `portal/**` and `graphify-out/**` — gitignored build output, regenerated on
+every run. Authored references were roughly 20 lines, all but two inside this repo.
+
+So both were re-tiered here on 2026-07-18, each leaving a tombstone at its original
+`decisions/SYS-0NN-*.md` path so existing citations keep resolving. The numbers are retired
+and never reused.
+
+One citation was deliberately **not** swept:
+[`case-study/graphify-knowledge-graph-eval.md`](../case-study/graphify-knowledge-graph-eval.md)
+records "SYS-011 depends on SYS-008" as the output of a paid knowledge-graph eval. That is a
+dated record of what an extractor found, not an index — footnoted, never rewritten.

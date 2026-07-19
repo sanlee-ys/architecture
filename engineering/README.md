@@ -45,6 +45,19 @@ The house style every repo inherits — the conventions that make separate repos
 - **Tool-layer contract** — one observation shape + error-recovery + an eval gate for agent-callable tools (`SYS-003`).
 - **Eval-as-acceptance** — a change ships when a gate says so, not when it "looks right."
 - **Context-budget discipline** — cap and scope results, cite the source, never dump a document when a chunk answers.
+- **Repo layout the portal depends on** — every app repo keeps `README.md`, `docs/` and
+  `decisions/` **at its root, under exactly those names**. `scripts/build_portal.py` copies
+  those three and nothing else (`APP_COPIED`, and the `for sub in ("docs", "decisions")` loop
+  that skips silently via `if s.exists()`). Rename `decisions/` to `adrs/` in any repo and the
+  portal drops that repo's entire decision log **with no error and no warning** — the build
+  goes green and the content is simply gone.
+
+  *Written down 2026-07-18, having previously existed only inside the build script.* This is a
+  genuine cross-repo binding: it constrains six repos' directory layout, and it is the reason
+  it did **not** ride down with the portal decision when that was re-tiered to
+  [`ADR-001`](../adr/ADR-001-documentation-portal.md). A constraint recorded only in the code
+  that enforces it is one nobody outside this repo can see — the same class of failure as a
+  contract whose guard was never wired.
 
 ## Where the depth lives — a reading map
 

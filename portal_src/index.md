@@ -1,9 +1,9 @@
 # Projects — System Portal
 
 One place to read the whole system and jump straight to the code. Here's the shape of it —
-a first static cut of the **system map** (the interactive version is `SYS-008`, Phase 2).
+a first static cut of the **system map** (the interactive version is `architecture/ADR-001`, Phase 2).
 For where everything actually stands right now — versions, what's shipping next — see the
-[Roadmap](roadmap.md) (`SYS-011`):
+[Roadmap](roadmap.md) (`architecture/ADR-002`):
 
 ```mermaid
 graph TD
@@ -18,7 +18,7 @@ graph TD
 
 !!! note "How this stays honest"
     Everything below is **generated** from the source repos — read it here, but edit it
-    in its home repo. See [SYS-008](decisions/SYS-008-documentation-portal.md).
+    in its home repo. See [architecture/ADR-001](adr/ADR-001-documentation-portal.md).
 
 ## Jump in
 

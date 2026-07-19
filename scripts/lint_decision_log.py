@@ -52,9 +52,11 @@ README = REPO_ROOT / "README.md"
 # not these docs. Grandfathered rather than backfilled; this list may only shrink.
 LEGACY_NO_DOWNSTREAM = {
     "SYS-001", "SYS-002", "SYS-003", "SYS-004", "SYS-005", "SYS-006",
-    "SYS-007", "SYS-008", "SYS-009", "SYS-010", "SYS-011", "SYS-012",
+    "SYS-007", "SYS-009", "SYS-010", "SYS-012",
     "SYS-013", "SYS-014", "SYS-015",
 }
+# SYS-008 and SYS-011 left this list on 2026-07-18 by being re-tiered to
+# architecture/adr/ — the sanctioned direction. The list may only shrink.
 
 ROW = re.compile(r"^\|\s*\[(SYS-\d+)\]\(([^)]+)\)\s*\|(.*)\|\s*$")
 STATUS = re.compile(r"^\*\*Status:\*\*\s*(.+?)\s*$", re.MULTILINE)
@@ -74,7 +76,16 @@ def _table_rows() -> dict[str, tuple[str, str]]:
     return rows
 
 
-LIFECYCLE = ("superseded", "deprecated", "rejected", "accepted", "proposed", "closed")
+LIFECYCLE = (
+    "superseded", "deprecated", "rejected", "accepted", "proposed", "closed", "moved",
+)
+
+# A re-tiered decision leaves a tombstone at its original path so existing citations keep
+# resolving (SYS-001's narrowed retroactivity rule). A tombstone is a redirect, not a
+# decision, so the content checks below do not apply to it — but it must still carry a row
+# in the log table, because a retired number that vanishes from the index is exactly how a
+# citation starts coming from memory.
+TOMBSTONE_STATUS = "moved"
 
 
 def _short_status(raw: str) -> str:
@@ -143,6 +154,21 @@ def lint() -> list[str]:
             if (REPO_ROOT / link).resolve().exists():
                 continue
             problems.append(f"{rel}: relative link '{link}' does not resolve.")
+
+        # A tombstone redirects; it does not decide. Skip the content checks, but only
+        # after confirming it actually points somewhere — a redirect to nothing is worse
+        # than no redirect, because it looks handled.
+        if header and _short_status(header.group(1)) == TOMBSTONE_STATUS:
+            targets = [
+                lk for lk in MD_LINK.findall(text)
+                if "/adr/" in lk or lk.lstrip("./").startswith("adr/")
+            ]
+            if not targets:
+                problems.append(
+                    f"{rel}: status is '{TOMBSTONE_STATUS}' but no link to a destination "
+                    f"tier was found. A tombstone must name where the decision went."
+                )
+            continue
 
         alts = ALTS.search(text)
         if not alts or not [
