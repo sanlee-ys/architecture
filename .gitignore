@@ -3,9 +3,13 @@
 Thumbs.db
 desktop.ini
 
-# Portal (SYS-008) — both are generated; never commit them.
+# Portal (architecture/ADR-001) — both are generated; never commit them.
 # `portal/` is assembled by scripts/build_portal.py; `site/` is the MkDocs build output.
 portal/
 site/
 
 graphify-out/
+
+# Bytecode from scripts/ (lint_decision_log.py, build_portal.py run locally).
+__pycache__/
+*.pyc

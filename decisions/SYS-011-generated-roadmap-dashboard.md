@@ -32,3 +32,7 @@ records `"SYS-011 depends on SYS-008"` as the verified output of a paid knowledg
 That is a **dated record of what an extractor found on a given day**, not an index of current
 structure. It is footnoted, never rewritten — editing a published result to match a later
 reorganisation would falsify the record it exists to be.
+
+For readers arriving from that record: both numbers in it are retired. `SYS-011` is this
+document, and `SYS-008` is now
+[`ADR-001`](../adr/ADR-001-documentation-portal.md).

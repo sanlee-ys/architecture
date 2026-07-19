@@ -331,7 +331,7 @@ def write_roadmap() -> None:
         "The system's status at a glance — generated from "
         "[`program/README.md`](program/README.md#roadmap-now-next-later) (the curated "
         "Now/Next/Later plan) and each app's live version. Edit the source, not this page "
-        "(`system/SYS-011`).\n\n"
+        "(`architecture/ADR-002`).\n\n"
         '<div class="grid cards" markdown>\n\n'
         + "\n\n".join(cards)
         + "\n\n</div>\n\n"
