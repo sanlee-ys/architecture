@@ -71,6 +71,20 @@ When a new repo appears, ask two questions:
 
 If both answers are no, leave it untagged and do not treat that as debt.
 
+## Downstream surfaces
+
+Per [`SYS-009`](SYS-009-documentation-cascade.md), the surfaces this decision touches:
+
+| Surface | Change owed |
+|---|---|
+| `architecture/README.md` decision log | New SYS-020 row — **done in this PR.** |
+| `faithfulness-judge` | First tag, anchoring the published κ figures. Follow-on. |
+| `kb-agent` | First tag, anchoring the retrieval eval numbers. Follow-on. |
+| `notes-api` | Post-port tag. **Open question:** the existing `v1-rest-baseline` is a milestone marker, not semver, so adopting semver here means two schemes in one repo's tag list. Deliberately not resolved unilaterally. |
+| `dotfiles` `claude/skills/status-map/SKILL.md` | Must consult this ADR before flagging a missing tag, or it re-raises deliberately untagged repos every run — handled in [dotfiles#41](https://github.com/sanlee-ys/dotfiles/pull/41). |
+| Repos named "deliberately untagged" | **None.** The decision is that nothing changes there; recording it here is the entire point. |
+| `defense-news-classifier` | **None.** Already compliant; this ADR ratifies its practice rather than asking anything of it. |
+
 ## Consequences
 
 **What this makes easier**
