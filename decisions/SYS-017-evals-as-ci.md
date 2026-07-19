@@ -110,10 +110,14 @@ or model-version drift actually make the gate flap. It is not a prerequisite for
 
 ## Downstream surfaces
 
-- **`program/README.md`** — the roadmap's **Next** entry and risk **R6** both describe the
+- ~~**`program/README.md`** — the roadmap's **Next** entry and risk **R6** both describe the
   `kb-agent` work; R6's "remaining piece" wording should name the corpus-provenance precondition,
   since that is now the actual blocking step. The roadmap page is generated from this section by
-  `scripts/build_portal.py`, so this is the single edit point.
+  `scripts/build_portal.py`, so this is the single edit point.~~ **Done 2026-07-19** — R6 now
+  names the precondition, and its "CI runs across all three code repos" claim was corrected to
+  one: the same overclaim this ADR caught on the portfolio had a second instance here, in the
+  document that *records* the finding. R2 was restated at the same time; it was two versions
+  stale.
 - **`engineering/README.md`** — the keystone line ("finish evals-as-CI: a real golden set + judge,
   wired to fail a PR") predates the classifier pilot shipping; it reads as fully unbuilt.
 - ~~**`README.md` decision-log table** — add a row for this ADR, **and for `SYS-016`**, which exists
