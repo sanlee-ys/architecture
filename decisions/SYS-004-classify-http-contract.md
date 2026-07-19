@@ -34,11 +34,13 @@
 > this banner rather than quietly rewritten, because the gap between what it says and what
 > runs is the finding.
 >
-> **What actually closes this** is a single shared contract artifact both repos assert
-> against — a committed JSON Schema or response fixture that the provider validates its
-> response model against and the consumer validates its stub against, so changing one copy
-> fails the other's build. Until that exists, this ADR is a description, not a guard, and any
-> surface claiming CI catches `/classify` drift is over-claiming (see the sweep in the
+> **What closes this** is a single shared contract artifact both repos assert against, so
+> changing one copy fails the other's build. That mechanism is now decided and specified in
+> [`SYS-018`](SYS-018-provider-owned-contract-artifacts.md): the **provider** owns and
+> publishes a generated, closed schema artifact, its own CI fails on a stale one, and each
+> consumer fetches the published copy and fails on divergence. Until both halves are merged
+> this ADR remains a description rather than a guard, and any surface claiming CI catches
+> `/classify` drift is over-claiming (see the
 > [program risk register](../program/README.md#risk-register), R8).
 
 ## Context
