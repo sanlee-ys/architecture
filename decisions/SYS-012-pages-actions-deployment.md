@@ -45,7 +45,7 @@ legacy`) to **Actions-based deployment** (`build_type: workflow`):
   source of the "try again later" conflict.
 - Pages source flipped per-repo via `gh api --method PUT repos/{owner}/{repo}/pages
   -f build_type=workflow` (no UI click needed).
-- `architecture`'s portal (`SYS-008`) was already on `build_type: workflow`
+- `architecture`'s portal (`architecture/ADR-001`, then `SYS-008`) was already on `build_type: workflow`
   from the start and has a 100% success rate across its last 10 deploys —
   this decision brings the other two public sites in line with that existing,
   working pattern rather than inventing a new one.

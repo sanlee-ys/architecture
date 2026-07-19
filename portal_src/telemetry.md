@@ -4,7 +4,7 @@
     Nothing is deployed collecting metrics yet, so there are no live dashboards to embed
     (doing so now would be decoration over no data). This section turns real once a
     service runs somewhere — it tracks the OpenTelemetry item on the roadmap. See
-    [SYS-008](decisions/SYS-008-documentation-portal.md).
+    [architecture/ADR-001](adr/ADR-001-documentation-portal.md).
 
 What will live here:
 

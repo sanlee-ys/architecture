@@ -73,13 +73,13 @@ which is which. It is *not* a ranking — a `Standard` can be more rigorously en
 | [SYS-005](decisions/SYS-005-event-loop-contract.md) | Contract | Close the classify-and-writeback loop — freeze the BackgroundTask + tags-writeback contract | Accepted |
 | [SYS-006](decisions/SYS-006-notes-read-contract.md) | Contract | Freeze the GET /notes read contract between kb-agent and notes-api | Accepted |
 | [SYS-007](decisions/SYS-007-engineering-substrate-and-ai-skills.md) | Strategy | Engineering is the substrate of the product & program tracks; an AI-skill map across all three | Accepted |
-| [SYS-008](decisions/SYS-008-documentation-portal.md) | Infra | A generated documentation portal — one browsable view over the whole system | Accepted |
+| [SYS-008](decisions/SYS-008-documentation-portal.md) | Infra | A generated documentation portal — **re-tiered to [`ADR-001`](adr/ADR-001-documentation-portal.md)** | Moved |
 | [SYS-009](decisions/SYS-009-documentation-cascade.md) | Practice | Cascade documentation by altitude — one body of work, a distinct artifact per surface | Accepted |
 | [SYS-010](decisions/SYS-010-security-posture.md) | Security | Security posture — the local-service trust model and house security rules | Accepted |
-| [SYS-011](decisions/SYS-011-generated-roadmap-dashboard.md) | Infra | A generated roadmap dashboard — the whole system's status at a glance | Accepted |
+| [SYS-011](decisions/SYS-011-generated-roadmap-dashboard.md) | Infra | A generated roadmap dashboard — **re-tiered to [`ADR-002`](adr/ADR-002-generated-roadmap-dashboard.md)** | Moved |
 | [SYS-012](decisions/SYS-012-pages-actions-deployment.md) | Infra | GitHub Pages — deploy via Actions, not the legacy branch build | Accepted |
 | [SYS-013](decisions/SYS-013-self-healing-by-default.md) | Standard | Design services to self-heal — detect and recover before a human has to | Accepted |
-| [SYS-014](decisions/SYS-014-python-docstring-standard.md) | Standard | Google-style docstrings as the Python docstring standard | Accepted |
+| [SYS-014](decisions/SYS-014-python-docstring-standard.md) | Standard | Google-style docstrings — **re-tiered to a house convention** ([`engineering/`](engineering/README.md)) | Moved |
 | [SYS-015](decisions/SYS-015-public-claude-ops-repo.md) | Practice | Publish the Claude operating layer as a public repo (claude-ops) | Accepted |
 | [SYS-016](decisions/SYS-016-agent-tool-seam-threat-model.md) | Security | Threat model for the agent tool seam — as a regulated deployment | Accepted |
 | [SYS-017](decisions/SYS-017-evals-as-ci.md) | Standard | Make evals-as-CI a system-wide pattern, gated on corpus provenance | Proposed |

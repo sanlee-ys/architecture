@@ -105,10 +105,47 @@ in the house conventions doc when they bind several repos, or in the binding rep
 when they bind one. They simply do not consume a number in a log whose entire value is that every
 entry is load-bearing.
 
-**This is not retroactive.** `SYS-001`–`SYS-016` stand exactly as recorded; nothing is renumbered,
-demoted, or superseded on account of a rule written after them. Citations across every repo,
-the portal, and the public surfaces point at those numbers, and churning them to satisfy a later
-rule would cost more than the inconsistency it corrects. The bar governs what gets added next.
+~~**This is not retroactive.** `SYS-001`–`SYS-016` stand exactly as recorded; nothing is
+renumbered, demoted, or superseded on account of a rule written after them.~~ **Narrowed
+2026-07-18 (same day) — see below.**
+
+> **Retroactivity is limited, not forbidden** *(narrowing, 2026-07-18)*.
+>
+> The original clause bundled two claims that came apart the moment the lower tiers landed.
+> The first — *numbers already issued are not reused or renumbered* — is correct and stands:
+> citations across every repo, the portal, and public surfaces point at those numbers, and
+> churning them costs more than the inconsistency it corrects. The second — *nothing ever
+> moves tier* — was never a principle. It was a description of there being nowhere to go.
+> `architecture/adr/` did not exist when this was written.
+>
+> The rule, as narrowed:
+>
+> **Numbers already issued are not reused or renumbered, and every move leaves a tombstone at
+> the original path so existing citations keep resolving. Published results that name a
+> document are records, not indexes — they are footnoted, never rewritten. Within those
+> constraints, an entry may be re-tiered when it fails the bar *and* a correct destination
+> exists that did not exist when it was written. Absent such a destination, it stays.**
+>
+> That last conjunct carries the weight. It is why [`SYS-012`](SYS-012-pages-actions-deployment.md)
+> stays — it binds two sibling repos and has no coherent home — and why
+> [`SYS-016`](SYS-016-agent-tool-seam-threat-model.md) stays, its proposed destination being
+> the wrong one. It encodes the *missing lower tier* as the trigger rather than opening the
+> log to general revisionism.
+>
+> **Why this was narrowed rather than left alone.** An audit on 2026-07-18 proposed five
+> demotions. Adversarial reviewers killed all five by citing this clause — a procedural
+> objection, applied to a rule the owner had already authorized suspending, which meant the
+> merits were never argued. Re-run on merits alone, three of the five moved: `SYS-008` and
+> `SYS-011` fail prong 1 (they are this repo's own build features), and `SYS-014` fails prong
+> 2 on its own testimony, describing itself as *"ratifying a de-facto standard, not imposing a
+> new one."* A clause that blocks correct outcomes on procedure is doing the opposite of its
+> job.
+>
+> **On the bar's record.** Until today it had never rejected an entry, which read as
+> permissiveness. It was not: the bar was written on 2026-07-18 to govern prospectively and no
+> new candidate had arrived, so "never rejected" was a statistic about zero trials. Applied
+> retroactively to a hand-picked adversarial slate it rejects three of five. The bar has
+> teeth; it had simply never been swung.
 
 ## Consequences
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Assemble the system portal's docs tree (SYS-008).
+Assemble the system portal's docs tree (architecture/ADR-001, formerly SYS-008).
 
 The portal is a GENERATED, read-only VIEW over the source repos — "aggregate, never
 duplicate". This script copies each repo's real docs into a throwaway `portal/` tree
@@ -12,11 +12,11 @@ that MkDocs renders. Nothing here is authored by hand except the chrome in
 Three jobs:
   1. Copy each repo's README / docs / decisions into portal/.
   2. Rewrite relative links so the portal is navigable AND every code reference becomes
-     a one-click jump to GitHub (SYS-008, "code is always one click away"):
+     a one-click jump to GitHub (architecture/ADR-001, "code is always one click away"):
        - link to a doc we also copied   -> left relative (in-portal navigation)
        - link to source/config in repo  -> rewritten to github.com/<org>/<repo>/blob/...
        - link that resolves nowhere      -> left as-is (broken at the source, not here)
-  3. Generate the Roadmap page (SYS-011) from program/README.md's Now/Next/Later section
+  3. Generate the Roadmap page (architecture/ADR-002) from program/README.md's Now/Next/Later section
      plus each app's live pyproject.toml version — no roadmap state is hand-duplicated.
 
 It is cwd-independent (paths resolve from this file) and reads the sibling repos as they
@@ -238,7 +238,7 @@ def write_indexes() -> None:
 def read_version(folder: str) -> str:
     """Read an app's live version straight from its pyproject.toml.
 
-    Never duplicated into a second file — SYS-011 (this dashboard cannot drift
+    Never duplicated into a second file — architecture/ADR-002 (this dashboard cannot drift
     from reality).
 
     Args:
@@ -288,7 +288,7 @@ def parse_roadmap() -> dict[str, list[tuple[str, str]]]:
 
 
 def write_roadmap() -> None:
-    """Generate the Roadmap page (SYS-011): one card per app with its live version and
+    """Generate the Roadmap page (architecture/ADR-002): one card per app with its live version and
     Now/Next/Later items, plus a cross-cutting list for tags that aren't an app repo.
     Everything here is read from program/README.md and each app's pyproject.toml —
     nothing on this page is authored by hand."""

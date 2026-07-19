@@ -56,6 +56,16 @@ depends on `SYS-002` and `SYS-003`, `SYS-011` depends on `SYS-008`, and so on �
 edges pulled straight from the markdown, not inferred. That's the exact "stop re-deriving this by
 grep every session" payoff I was looking for.
 
+> **Footnote added 2026-07-18, not a correction.** `SYS-008` and `SYS-011` have since been
+> re-tiered to [`architecture/ADR-001`](../adr/ADR-001-documentation-portal.md) and
+> [`ADR-002`](../adr/ADR-002-generated-roadmap-dashboard.md); the numbers are retired and
+> tombstoned. The sentence above is **left exactly as written**, because it is a dated record
+> of what an extractor found on the day it ran — a result, not an index. Rewriting a published
+> measurement so it matches a later reorganisation would falsify the very thing this page
+> exists to document, and would quietly turn "$0.29 bought a correct graph" into an unverifiable
+> claim. `SYS-001`'s narrowed retroactivity rule says this explicitly: published results that
+> name a document are footnoted, never rewritten.
+
 **Community detection produced real, not cosmetic, groupings.** On the single-repo run, Leiden
 split the corpus into distinctions I hadn't explicitly drawn but that were true in the docs — "AI
 Services Architecture" (the three service repos + their HTTP contracts) came out as a separate
