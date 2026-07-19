@@ -92,6 +92,13 @@ UNMARKED_ALLOWED = {
     "README.md": 0,
 }
 
+# Fenced blocks and inline code spans. Stripped before any scanning: a marker written
+# inside backticks is DOCUMENTATION OF the convention, not a use of it, and a figure in a
+# code sample is a sample. Found immediately - writing the convention down in
+# engineering/README.md made this checker fail on the very page that defines it, reporting
+# the literal placeholder `KEY` as an unknown metric key.
+CODE = re.compile(r"```.*?```|`[^`\n]*`", re.DOTALL)
+
 # A percentage to one decimal (92.6%) or a three-decimal F1 (0.911). Deliberately narrow:
 # broad number-matching would flag dates, counts and version strings, and a check that
 # cries wolf gets silenced.
@@ -146,7 +153,9 @@ def scan() -> tuple[list[str], int, dict[str, list[str]]]:
         if not path.exists():
             problems.append(f"{rel}: listed in SCANNED but not on disk.")
             continue
-        text = path.read_text(encoding="utf-8")
+        # Code spans hold examples, not claims. Strip them before anything else so the
+        # page documenting the convention is not read as using it.
+        text = CODE.sub("", path.read_text(encoding="utf-8"))
 
         for key, shown in MARKER.findall(text):
             if key not in known:

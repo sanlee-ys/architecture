@@ -62,6 +62,39 @@ The house style every repo inherits — the conventions that make separate repos
   that **enforcement is the wrong axis to sort a decision log by** — a lint rule that fails
   builds in three repos is still a lint rule.
 
+- **Published figures are asserted, never retyped** — any eval number quoted outside the repo
+  that measured it must be checked against that repo's published artifact. The classifier
+  publishes [`evals/metrics.json`](https://github.com/sanlee-ys/defense-news-classifier/blob/main/evals/metrics.json);
+  a figure opts in with a marker, and CI fails if it drifts.
+
+  | | |
+  |---|---|
+  | **Marker (HTML)** | `<span data-metric="KEY">92.6%</span>` |
+  | **Marker (Markdown)** | `category <!-- metric:KEY -->92.6%` — renders invisible |
+  | **Keys** | the artifact's `gold` object (`category_accuracy`, `domain_macro_f1`, …) |
+  | **Fails on** | value mismatch · unknown key · zero markers found |
+  | **Warns and passes on** | artifact fetch failure — an outage must not redden an unrelated build |
+
+  **Historical figures are deliberately unmarked.** A v1 baseline or a superseded column is a
+  frozen record of a past run; marking it would make the guard rewrite history on every release.
+  That is `SYS-009`'s guarantee-vs-dated-observation rule applied to numbers, and it is why
+  `decisions/` and `adr/` are outside every one of these checks: an ADR records what was true
+  when it was written.
+
+  **Where the repo owns the artifact, generate instead of check.** The classifier's own README
+  table is produced by `scripts/gen_readme_metrics.py`, not verified by a checker — a generated
+  number cannot be wrong, where a checked one is still wrong between a careless edit and the next
+  CI run. Same reasoning as [`ADR-002`](../adr/ADR-002-generated-roadmap-dashboard.md).
+
+  *Written down 2026-07-19, after the same stale number was found on five surfaces across three
+  repos in one day.* **This section is the shared artifact; the implementations are deliberately
+  not shared.** Four small checkers (`portfolio/scripts/check-published-metrics.cjs`,
+  `architecture/scripts/check_program_metrics.py`,
+  `learning-notes/scripts/check_published_metrics.py`, and the classifier's generator) each stay
+  self-contained, because a vendored guard that falls out of sync is worse than a duplicated one
+  — it reports green from stale logic. Duplicated *logic* is cheap at this size; a duplicated
+  *convention* is what actually hurt, so that is the part centralized here.
+
 - **Repo layout the portal depends on** — every app repo keeps `README.md`, `docs/` and
   `decisions/` **at its root, under exactly those names**. `scripts/build_portal.py` copies
   those three and nothing else (`APP_COPIED`, and the `for sub in ("docs", "decisions")` loop
