@@ -55,6 +55,44 @@ requires**. The delta column is the roadmap; nothing in it is claimed as built.
 | T7 | **Repudiation / no audit trail** (STRIDE-Repudiation) | A regulated auditor asks "who asked what, which tools ran, what data was touched?" — currently unanswerable after the fact | **The substrate now exists:** the OTel tracing shipped in `SYS-007` emits a span per tool call with the tool name, SYS-003 status, and (for model calls) token usage | A durable, tamper-evident audit sink (traces are ephemeral by default); tenant + principal stamped on every span; a retention policy; the audit log as a first-class output, not a debugging aid |
 | T8 | **Secrets & supply chain** (STRIDE-Elevation) | `ANTHROPIC_API_KEY` from env; third-party deps across the seam | `SYS-010` rule 5 (secrets in env, `.gitignore` blocks key material); pinned deps; CodeQL on the code repos | A secret manager with rotation (not a long-lived env var); a dependency-advisory gate in CI; provenance on the model provider itself |
 
+### Relationship to `kb-agent`'s own threat model (added 2026-07-18)
+
+`kb-agent` carries its own threat model at
+[`docs/notes/tool-seam-threat-model.md`](https://github.com/sanlee-ys/kb-agent/blob/main/docs/notes/tool-seam-threat-model.md),
+which remains the canonical analysis; the decision taken from it is recorded as
+`kb-agent/ADR-002` in that repo's own `decisions/` tier. That note explicitly declined a `SYS`
+number — *"a kb-agent-local threat model shouldn't squat
+that shared numbering"* — and predicted that if it were ever promoted, the resulting `SYS-NNN`
+would **link back to it**. This ADR was written without that link. Adding it now; the omission
+was found by a two-tier decision-log audit, not by anything breaking.
+
+**The two are not duplicates, and they are not even at the same altitude.** This ADR projects
+the system into a hypothetical *regulated* deployment and is deliberately "write, don't build."
+The note models the system **as it actually is**, verified against source.
+
+**⚠️ The `T` numbering collides, and the collision is genuinely confusing.** Both use `T1`–`T7`
+for entirely different taxonomies:
+
+| | This ADR (`SYS-016`) | `kb-agent`'s note |
+|---|---|---|
+| What `T` enumerates | OWASP-LLM / STRIDE **risk categories** | Concrete prompt-injection **attack techniques** |
+| `T4` | Insecure output handling | Citation poisoning |
+| `T5` | Multi-tenant data-boundary breach | Field smuggling |
+| `T7` | Repudiation / no audit trail | Resource exhaustion |
+
+The relationship is nesting, not overlap: **the note's entire `T1`–`T7` series is a
+decomposition of this ADR's `T1` (prompt injection).** A citation of "T5" is ambiguous unless
+the reader already knows which document is meant, which is exactly the failure a numbering
+scheme exists to prevent.
+
+**Not renumbering either side.** Both series are cited from their own repos, and renumbering to
+resolve an ambiguity would break live citations to fix a readability problem — the same trade
+[`SYS-001`](SYS-001-record-architecture-decisions.md)'s non-retroactivity clause rejects, and
+that the 2026-07-18 audit rejected three times over for the `SYS` merges. **Disambiguate by
+prefix instead when citing across the boundary:** `SYS-016/T5` for the risk category,
+`kb-agent/T5` for the injection technique. The existing prefix convention for ADR numbers
+already works this way; this extends it one level down.
+
 ### The load-bearing insight
 
 Six of the eight threats are **already controlled for the deployment the system actually is** —
@@ -91,6 +129,14 @@ the step from "traces" to "audit trail."
   LLM input or HTTP seam) is what this model would be walked against for any new tool.
 - Program view / risk register: no new *current* risk (the system's real posture is unchanged);
   this ADR is design reasoning, so it rides as a referenced ADR, not a new open risk.
+- **`kb-agent/docs/notes/tool-seam-threat-model.md`** *(added 2026-07-18)* — the repo-local
+  threat model this ADR sits above; the decision taken from it is `kb-agent/ADR-002` in that
+  repo's own tier. The back-link that note
+  predicted is now in the Decision section, along with the `T`-numbering collision between the
+  two series and the prefix convention for citing across it. Also recorded there: that note's
+  line-number references into `agent/tools.py` and `agent/agent.py` have drifted, and it
+  predates the `search_result` content-block presentation this ADR credits as a `T1` control —
+  so the note understates the mitigation it now has.
 
 ## Consequences
 
