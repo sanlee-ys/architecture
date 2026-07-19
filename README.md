@@ -50,32 +50,48 @@ never ambiguous.
 
 ## System Decision Log
 
-| # | Title | Status |
-|---|-------|--------|
-| [SYS-001](decisions/SYS-001-record-architecture-decisions.md) | Record architecture decisions as two-tier ADRs | Accepted |
-| [SYS-002](decisions/SYS-002-model-tier-standard.md) | Build on the Anthropic API; default to Sonnet, escalate to Opus only where it pays | Accepted |
-| [SYS-003](decisions/SYS-003-agent-tool-layer-contract.md) | A contract for how kb-agent exposes and calls cross-system tools | Accepted |
-| [SYS-004](decisions/SYS-004-classify-http-contract.md) | Freeze the /classify HTTP contract between the classifier and kb-agent | Accepted |
-| [SYS-005](decisions/SYS-005-event-loop-contract.md) | Close the classify-and-writeback loop — freeze the BackgroundTask + tags-writeback contract | Accepted |
-| [SYS-006](decisions/SYS-006-notes-read-contract.md) | Freeze the GET /notes read contract between kb-agent and notes-api | Accepted |
-| [SYS-007](decisions/SYS-007-engineering-substrate-and-ai-skills.md) | Engineering is the substrate of the product & program tracks; an AI-skill map across all three | Accepted |
-| [SYS-008](decisions/SYS-008-documentation-portal.md) | A generated documentation portal — one browsable view over the whole system | Accepted |
-| [SYS-009](decisions/SYS-009-documentation-cascade.md) | Cascade documentation by altitude — one body of work, a distinct artifact per surface | Accepted |
-| [SYS-010](decisions/SYS-010-security-posture.md) | Security posture — the local-service trust model and house security rules | Accepted |
-| [SYS-011](decisions/SYS-011-generated-roadmap-dashboard.md) | A generated roadmap dashboard — the whole system's status at a glance | Accepted |
-| [SYS-012](decisions/SYS-012-pages-actions-deployment.md) | GitHub Pages — deploy via Actions, not the legacy branch build | Accepted |
-| [SYS-013](decisions/SYS-013-self-healing-by-default.md) | Design services to self-heal — detect and recover before a human has to | Accepted |
-| [SYS-014](decisions/SYS-014-python-docstring-standard.md) | Google-style docstrings as the Python docstring standard | Accepted |
-| [SYS-015](decisions/SYS-015-public-claude-ops-repo.md) | Publish the Claude operating layer as a public repo (claude-ops) | Accepted |
-| [SYS-016](decisions/SYS-016-agent-tool-seam-threat-model.md) | Threat model for the agent tool seam — as a regulated deployment | Accepted |
-| [SYS-017](decisions/SYS-017-evals-as-ci.md) | Make evals-as-CI a system-wide pattern, gated on corpus provenance | Proposed |
+**Kind** answers "what sort of decision is this," because the log flattens a docstring
+convention and a frozen wire contract into identical-looking rows and a reader can't tell
+which is which. It is *not* a ranking — a `Standard` can be more rigorously enforced than a
+`Contract`, and currently is (see the [`SYS-001` correction](decisions/SYS-001-record-architecture-decisions.md)).
+
+| Kind | Means |
+|---|---|
+| **Contract** | A frozen wire shape between two repos. Breaking it is an integration failure. |
+| **Standard** | A binding rule applied across repos. |
+| **Practice** | How the work itself is organised and recorded. |
+| **Infra** | Build, deploy, and generation machinery. |
+| **Security** | Trust model and threat analysis. |
+| **Strategy** | Direction and framing rather than a technical constraint. |
+
+| # | Kind | Title | Status |
+|---|------|-------|--------|
+| [SYS-001](decisions/SYS-001-record-architecture-decisions.md) | Practice | Record architecture decisions as two-tier ADRs | Accepted |
+| [SYS-002](decisions/SYS-002-model-tier-standard.md) | Standard | Build on the Anthropic API; default to Sonnet, escalate to Opus only where it pays | Accepted |
+| [SYS-003](decisions/SYS-003-agent-tool-layer-contract.md) | Contract | A contract for how kb-agent exposes and calls cross-system tools | Accepted |
+| [SYS-004](decisions/SYS-004-classify-http-contract.md) | Contract | Freeze the /classify HTTP contract between the classifier and kb-agent | ⚠️ **Accepted — BREACHED** |
+| [SYS-005](decisions/SYS-005-event-loop-contract.md) | Contract | Close the classify-and-writeback loop — freeze the BackgroundTask + tags-writeback contract | Accepted |
+| [SYS-006](decisions/SYS-006-notes-read-contract.md) | Contract | Freeze the GET /notes read contract between kb-agent and notes-api | Accepted |
+| [SYS-007](decisions/SYS-007-engineering-substrate-and-ai-skills.md) | Strategy | Engineering is the substrate of the product & program tracks; an AI-skill map across all three | Accepted |
+| [SYS-008](decisions/SYS-008-documentation-portal.md) | Infra | A generated documentation portal — one browsable view over the whole system | Accepted |
+| [SYS-009](decisions/SYS-009-documentation-cascade.md) | Practice | Cascade documentation by altitude — one body of work, a distinct artifact per surface | Accepted |
+| [SYS-010](decisions/SYS-010-security-posture.md) | Security | Security posture — the local-service trust model and house security rules | Accepted |
+| [SYS-011](decisions/SYS-011-generated-roadmap-dashboard.md) | Infra | A generated roadmap dashboard — the whole system's status at a glance | Accepted |
+| [SYS-012](decisions/SYS-012-pages-actions-deployment.md) | Infra | GitHub Pages — deploy via Actions, not the legacy branch build | Accepted |
+| [SYS-013](decisions/SYS-013-self-healing-by-default.md) | Standard | Design services to self-heal — detect and recover before a human has to | Accepted |
+| [SYS-014](decisions/SYS-014-python-docstring-standard.md) | Standard | Google-style docstrings as the Python docstring standard | Accepted |
+| [SYS-015](decisions/SYS-015-public-claude-ops-repo.md) | Practice | Publish the Claude operating layer as a public repo (claude-ops) | Accepted |
+| [SYS-016](decisions/SYS-016-agent-tool-seam-threat-model.md) | Security | Threat model for the agent tool seam — as a regulated deployment | Accepted |
+| [SYS-017](decisions/SYS-017-evals-as-ci.md) | Standard | Make evals-as-CI a system-wide pattern, gated on corpus provenance | Proposed |
 
 ## Writing a new ADR
 
 0. **Check it earns a number.** Per [`SYS-001`](decisions/SYS-001-record-architecture-decisions.md)'s
    promotion bar, a `SYS` entry must both **cross repo boundaries** and **foreclose something** — a
    real alternative existed and this closed it off. Crossing repos alone makes it a *convention*,
-   which belongs in the house conventions doc or the binding repo's `CLAUDE.md`, not here.
+   which belongs in the binding repo's `CLAUDE.md`, not here. **If it binds only this repo, it is
+   an `ADR-NNN` in [`adr/`](adr/), not a `SYS` number** — that tier exists precisely so
+   architecture-local build decisions stop consuming system numbers.
 1. Copy [`TEMPLATE.md`](TEMPLATE.md) to `decisions/SYS-00N-short-title.md` (next number).
 2. Fill in **Context → Decision → Downstream surfaces → Consequences → Alternatives Considered**.
    `Downstream surfaces` is mandatory per [`TEMPLATE.md`](TEMPLATE.md) and `SYS-009` — "None" is a

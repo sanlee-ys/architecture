@@ -114,9 +114,10 @@ or model-version drift actually make the gate flap. It is not a prerequisite for
   `scripts/build_portal.py`, so this is the single edit point.
 - **`engineering/README.md`** — the keystone line ("finish evals-as-CI: a real golden set + judge,
   wired to fail a PR") predates the classifier pilot shipping; it reads as fully unbuilt.
-- **`README.md` decision-log table** — add a row for this ADR, **and for `SYS-016`**, which exists
+- ~~**`README.md` decision-log table** — add a row for this ADR, **and for `SYS-016`**, which exists
   on disk and is cited from `engineering/README.md` and `SYS-007` but was never added to the table.
-  The table currently stops at `SYS-015`, so it silently skips a number.
+  The table currently stops at `SYS-015`, so it silently skips a number.~~ **Done** — the table now
+  runs through `SYS-017` and carries a `Kind` column (2026-07-18).
 - **`SYS-008-documentation-portal.md:42`** — cites "`SYS-003` evals-as-CI". `SYS-003` is the
   agent-tool-layer contract. Repoint to this ADR.
 - **`portal_src/telemetry.md:13`** — cites "evals-as-CI (`SYS-007`, the keystone)". Repoint here.

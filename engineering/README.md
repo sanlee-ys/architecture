@@ -19,7 +19,7 @@ drift detection, integration test → eval gate.
 
 | Cluster | What it means here | Where it lives | Maturity |
 |---|---|---|---|
-| **Evals & quality bars** *(keystone)* | golden sets, LLM-as-judge, regression gate in CI | classifier eval harness; `SYS-003` eval gate | 🔄 building |
+| **Evals & quality bars** *(keystone)* | golden sets, LLM-as-judge, regression gate in CI | classifier eval harness + gold set + validated judge, gating PRs (`classifier/ADR-007`); system-wide pattern proposed in `SYS-017` | ✅ shipped in the classifier, 🔄 extending to `kb-agent` |
 | **Context engineering** | retrieval, chunk/result caps, grounding | `kb-agent` RAG; `SYS-003` rule 4 | ✅ in use (unnamed) |
 | **Agents & orchestration** | tool design, the tool-use loop, error recovery | `kb-agent` loop; `SYS-003` tool-layer contract | ✅ shipped |
 | **Observability, cost & reliability** | tracing, token/latency/drift, model-tier | OTel tracing across `kb-agent`, classifier `/classify`, `notes-api` (opt-in); `SYS-002` | ✅ tracing shipped |
@@ -30,7 +30,7 @@ drift detection, integration test → eval gate.
 Priority order. It rhymes with the program roadmap and adds the two skills the system uses or needs
 but never named:
 
-1. **Evals** (keystone, in flight) — finish evals-as-CI: a real golden set + judge, wired to fail a PR.
+1. **Evals** (keystone, partly shipped) — the classifier has this: a 54-snippet hand-labelled gold set, a judge validated against it, and threshold gates that fail a PR (`classifier/ADR-007`). What remains is extending the pattern to `kb-agent`'s retrieval and settling `SYS-017`, which is still `Proposed`.
 2. **Observability / OTel** *(shipped)* — OTel tracing across all three services (`kb-agent` loop, classifier `/classify`, `notes-api` enrichment seam), opt-in per service with GenAI/HTTP semconv attributes. Drift detection over the traces is the remaining refinement. You can't improve what you can't see.
 3. **Context-engineering depth** — past naive RAG: retrieval quality, reranking, memory.
 4. **AI security** *(threat model documented)* — the agent tool seam is modeled as a regulated deployment (`SYS-016`); building its tenancy + audit controls is the next step a real deployment would take.
