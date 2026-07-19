@@ -1,10 +1,16 @@
 # SYS-004: Freeze the /classify HTTP contract between the classifier and kb-agent
 
-**Status:** Accepted — **amended 2026-07-18: the contract is currently BREACHED; the guard this ADR claimed did not fire**
+**Status:** Accepted — breached 2026-07-18, **closed 2026-07-19**: contract re-frozen at three fields, guards now published and bilateral ([closure note](#closure-2026-07-19))
 **Date:** 2026-06-22 (amended 2026-07-18)
 **Deciders:** San Lee
 
 ---
+
+> **Closed 2026-07-19.** The breach below is resolved; read the amendment as history, not as
+> an open incident. The contract is re-frozen at three fields and both sides now check against
+> a **published** artifact rather than their own model. What the guard does and does not catch
+> is stated in the [closure note](#closure-2026-07-19) — it is a real guard, but it fails open
+> on an unreachable or unpublished artifact, and the record says so this time.
 
 > **Amendment, 2026-07-18 — the worked example happened, and nothing stopped it.**
 >
@@ -218,6 +224,42 @@ versioning rule above forces into the open.
 | Version the response with an explicit `version` field or `Accept` header negotiation | Over-engineered for one provider and one consumer in one person's system; semver on the service + a coordinated consumer update + this ADR is enough. Revisit if a second consumer appears |
 | Pin the contract here but skip the contract tests | A doc that isn't backed by a failing build is a wish, not a contract — the same "asserted, not measured" gap SYS-003 closed for the tool layer. The tests are what make the freeze real |
 | Make the seam a shared library/import instead of HTTP, to get the shape "for free" from a shared type | Re-couples the repos into one release cycle and one runtime — the opposite of the deliberate HTTP decoupling; a typed wire contract + tests gets the safety without the coupling |
+
+---
+
+## Closure (2026-07-19)
+
+The amendment above fired its own re-freeze trigger — "re-frozen at three fields only when
+the coordinated kb-agent update lands" — and then nobody wrote the closing entry. This is it.
+
+**Resolved.** The contract is re-frozen at three fields, `{ category, operational_domain,
+region }`:
+
+- Consumer updated: `kb-agent/agent/tools.py` — `CLASSIFY_REQUIRED_FIELDS = ("category",
+  "operational_domain", "region")`.
+- Provider publishes a real artifact: `defense-news-classifier/contracts/classify-response.schema.json`,
+  with `region` required. Both sides now check against **that**, not against their own model,
+  which was the original flaw.
+- Guards are bilateral and in CI on both repos (provider: `gen_contract_schema.py --check`;
+  consumers: a fetch of the published schema).
+
+**What the guard does not catch — stated plainly, because the last version of this section
+over-claimed and that is what caused the incident.** The failure policy
+(`kb-agent/scripts/_contract_fetch.py`) is deliberately fail-open:
+
+| Case | Behavior |
+|---|---|
+| Fetch succeeded, shapes differ | **Fails the build.** This is the real guard. |
+| Fetch failed (network, DNS, timeout, non-200) | **Warns and passes.** A GitHub outage must not redden an unrelated build. |
+| 404 (artifact not yet published) | **Warns that the check is INERT.** Lets a consumer land before its provider publishes, and self-arms when it does. |
+
+So drift is loud **when the published artifact is reachable**, and silent otherwise. That is a
+deliberate trade, not an oversight, and the warnings are loud rather than swallowed. The
+falsified Consequences above stay struck rather than restored: "drift is now loud, not silent"
+would be a smaller version of the same unqualified claim that failed here, and the visible
+correction is worth more than a tidy record ([SYS-001](SYS-001-record-architecture-decisions.md)).
+
+**Still open:** nothing in this ADR. The generalized fix is [SYS-018](SYS-018-provider-owned-contract-artifacts.md).
 
 ---
 

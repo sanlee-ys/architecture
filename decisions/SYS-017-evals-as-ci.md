@@ -127,9 +127,10 @@ or model-version drift actually make the gate flap. It is not a prerequisite for
 - **`classifier/ADR-007`** — remains canonical for the classifier's own two-gate design and is not
   superseded; its forward-reference to "the cross-repo SYS-007 evals-as-CI initiative" is the
   citation this ADR gives a real home.
-- **`kb-agent`** — has **no `decisions/` directory**; its decisions live here as SYS-NNN. The
-  instantiation work (gate script, floors file, CI job, `notes_dirs` override) rides this ADR
-  rather than a repo-local one, unless the repo grows its own log first.
+- **`kb-agent`** — *(corrected 2026-07-19: this said the repo had **no `decisions/` directory**.
+  It has seven ADRs, `ADR-001` through `ADR-007`.)* The instantiation work (gate script, floors
+  file, CI job, `notes_dirs` override) should therefore land as a repo-local ADR in
+  `kb-agent/decisions/`, citing this one — not ride this ADR as originally written.
 - **`portfolio/projects/product-and-program.html:113`** — states evals-as-CI runs "across all three
   code repos." False today; it runs in one. Public surface, so it should be corrected regardless of
   whether this ADR is accepted.
