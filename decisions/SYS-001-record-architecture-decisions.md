@@ -21,12 +21,23 @@ notes-api belongs to neither repo alone.
 
 Adopt a **two-tier ADR practice** with a single shared template:
 
-- **Repo-local** decisions live in each repo's `decisions/` folder (numbered `ADR-001…`), for
-  choices scoped to that one repo. The existing classifier log is the reference example.
+- **Repo-local** decisions live in each repo's `decisions/` folder, for choices scoped to that
+  one repo. The existing classifier log is the reference example. **The identifier is
+  `ADR-NNN`** — that is what every heading and every citation uses. *Filenames* vary:
+  `defense-news-classifier` and `faithfulness-judge` use a bare `NNN-` prefix, the others use
+  `ADR-NNN-`. Both are fine and neither is worth renaming — the deviation is filename-only,
+  every H1 and inbound citation already resolves, and renaming would break live public links
+  to fix something no reader can see. *(Reconciled with practice 2026-07-18; this line
+  previously mandated the `ADR-001…` filename form that 15 of 21 repo-local ADRs do not use.)*
 - **System** decisions live in this `architecture` repo's `decisions/` folder (numbered
   `SYS-001…`), for choices that touch two or more repos.
-- Both tiers use the same shape — Context → Decision → Consequences → Alternatives Considered,
-  with a Status / Date / Deciders header — captured in `TEMPLATE.md`.
+- Both tiers use the same shape — Context → Decision → Consequences → Alternatives Considered
+  → **Downstream surfaces** — with a Status / Date / Deciders header, captured in
+  [`TEMPLATE.md`](../TEMPLATE.md) at the repo root. *(The fifth section was added to
+  `TEMPLATE.md` by SYS-009 but never back-added to this list, so an author following this
+  line literally produced a non-compliant document — which is why only 2 of 17 SYS docs carry
+  it. Named here 2026-07-18; the rule is corrected rather than the 15 docs backfilled, since
+  the fault was in the instruction.)*
 - Cross-references are prefixed (`classifier/ADR-003`, `system/SYS-001`) so a number is never
   ambiguous across repos.
 
@@ -39,8 +50,31 @@ sufficient**. Applied alone it admits conventions. A docstring style ([`SYS-014`
 and a Pages deployment mechanism ([`SYS-012`](SYS-012-pages-actions-deployment.md)) both
 technically span repos, and both now sit in the log at the same altitude as the frozen wire
 contracts ([`SYS-004`](SYS-004-classify-http-contract.md), [`SYS-005`](SYS-005-event-loop-contract.md),
-[`SYS-006`](SYS-006-notes-read-contract.md)) whose breach fails a build. One is a lint setting;
-the others are load-bearing. The log does not distinguish them.
+[`SYS-006`](SYS-006-notes-read-contract.md)). The log does not distinguish them.
+
+> **Correction, 2026-07-18 (same day).** This paragraph originally continued: *"…whose
+> breach fails a build. One is a lint setting; the others are load-bearing."* **That contrast
+> is inverted on the evidence, and the examples were the wrong ones.** The "lint setting"
+> fails builds in **three** repos — `defense-news-classifier/pyproject.toml`,
+> `notes-api/pyproject.toml`, and `kb-agent/pyproject.toml` all select ruff's `"D"` rules
+> with `convention = "google"`, and all three run `ruff check` in CI. Meanwhile `SYS-004`'s
+> breach demonstrably did **not** fail a build: the classifier shipped `region` on
+> 2026-07-18 with no coordinated consumer update and both suites stayed green (see the
+> [`SYS-004` amendment](SYS-004-classify-http-contract.md)). Judged by "does a breach fail a
+> build," the docstring standard outranks the wire contract — which is not an argument for
+> demoting anything, it is proof that **enforcement is the wrong axis to sort a decision log
+> by.** A decision's altitude is what it *forecloses*, not what currently happens to be
+> wired into CI; enforcement is a property of this month's tooling, and it moved under this
+> paragraph within hours of it being written. The bar in the next section stands as written
+> — it tests foreclosure, correctly. Only this illustration was wrong, and it is left visible
+> rather than rewritten because the log's credibility rests on it being safe to read what it
+> actually said.
+>
+> The deeper reading, from the same audit: the bar has never rejected an entry, and both of
+> its named examples pass it. That is not a sign the bar is too loose. `architecture` has no
+> `ADR-*` namespace at all, and `kb-agent` and `portfolio` have no `decisions/` directory, so
+> decisions about those repos have no floor to land on and arrive here by default. The log's
+> size is a **missing lower tier**, not a permissive upper one.
 
 Seventeen entries in, that flattening has a measured cost. All of the following were true on
 2026-07-18:
