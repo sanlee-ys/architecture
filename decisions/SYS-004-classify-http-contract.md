@@ -1,10 +1,45 @@
 # SYS-004: Freeze the /classify HTTP contract between the classifier and kb-agent
 
-**Status:** Accepted
-**Date:** 2026-06-22
+**Status:** Accepted — **amended 2026-07-18: the contract is currently BREACHED; the guard this ADR claimed did not fire**
+**Date:** 2026-06-22 (amended 2026-07-18)
 **Deciders:** San Lee
 
 ---
+
+> **Amendment, 2026-07-18 — the worked example happened, and nothing stopped it.**
+>
+> This ADR named the `region` field as "exactly the change this rule exists to gate" and said
+> it "may not ship on the provider alone." On 2026-07-18 it shipped on the provider alone.
+> `defense-news-classifier` released `v3.0.0` with `region` on the `/classify` response
+> (`src/api.py:63`); `kb-agent/agent/tools.py` contains **no** occurrence of `region`. Of the
+> three things the versioning rule requires to move together, only condition 1 (the MAJOR
+> bump) happened. Condition 2 (coordinated consumer update) is outstanding — verified
+> 2026-07-18: no `region` branch and no open `region` PR on `sanlee-ys/kb-agent`. Condition 3
+> is this amendment.
+>
+> **Why no build went red — the mechanism, not the excuse.** The claim below that "both sides
+> now carry contract tests pinning this shape" is true only in a sense that turns out to be
+> worthless. Each side asserts against **its own private copy** of the shape:
+> the provider test's fixture was updated to include `"region"` in the same change that
+> shipped it (`defense-news-classifier/tests/test_api.py:41,51`), and the consumer test
+> asserts against a hand-written stub body it controls
+> (`kb-agent/tests/test_tools.py:160,275`). Neither imports a shared artifact; neither
+> observes the other. Two unit tests that happen to agree are not a contract test. That is
+> precisely the option this ADR's own Alternatives table rejected as the status quo —
+> *"the wire shape implicit, defined only by the two implementations"* — so the ADR rejected
+> that design and then, in implementation, shipped it.
+>
+> **The load-bearing clause is currently false.** "Exactly these two fields" (below) does not
+> describe the deployed provider. The clause is left in place, struck through in effect by
+> this banner rather than quietly rewritten, because the gap between what it says and what
+> runs is the finding.
+>
+> **What actually closes this** is a single shared contract artifact both repos assert
+> against — a committed JSON Schema or response fixture that the provider validates its
+> response model against and the consumer validates its stub against, so changing one copy
+> fails the other's build. Until that exists, this ADR is a description, not a guard, and any
+> surface claiming CI catches `/classify` drift is over-claiming (see the sweep in the
+> [program risk register](../program/README.md#risk-register), R8).
 
 ## Context
 
@@ -66,6 +101,10 @@ URL, supplied to `kb-agent` via the `defense-news-classifier` entry in `projects
 ```
 
 - **Exactly these two fields** — no more, no fewer. This is the load-bearing clause.
+  **⚠️ Currently false in production as of 2026-07-18** — the deployed provider returns a
+  third field, `region` (see the amendment banner above). Retained as written so the breach
+  is legible rather than papered over; it is re-frozen at three fields only when the
+  coordinated `kb-agent` update lands.
 - `category` ∈ `{ procurement, operations, policy, technology, industry }`.
 - `operational_domain` ∈ `{ air, land, sea, cyber, space, multi }`.
 
@@ -86,30 +125,47 @@ is a **breaking change to this contract**. Per the classifier's semver policy it
    after it drifts — so the consumer reads the new shape; and
 3. an **update to this ADR** (a new row in the table below, or a superseding `SYS-NNN`).
 
-The concrete worked example is the classifier's roadmapped **`v3.0.0` `region` field**:
-the response becomes `{category, operational_domain, region}`, which adds a field and
-therefore breaks this contract. It is exactly the change this rule exists to gate — it
-may not ship as a minor or a patch, and it may not ship on the provider alone.
+The concrete worked example was the classifier's **`v3.0.0` `region` field**: the response
+becomes `{category, operational_domain, region}`, which adds a field and therefore breaks
+this contract. It was exactly the change this rule existed to gate — it could not ship as a
+minor or a patch, and it could not ship on the provider alone.
+
+**It shipped on the provider alone, on 2026-07-18.** The rule was not enforced by anything;
+it was a sentence. Condition 1 (MAJOR bump) held because the classifier's own semver
+discipline is good. Condition 2 (coordinated consumer update) did not happen and nothing
+noticed. This is no longer a worked example — it is the case study in why a versioning rule
+without a shared, cross-repo assertion is documentation of an intention.
 
 Non-breaking changes — adding a *new* endpoint, loosening the char cap, improving an
 error `detail` string — keep the contract intact and need only the ordinary minor/patch
 treatment.
 
-**Both sides now carry contract tests pinning this shape**, so a drift is caught by a
-red build, not by a mis-classified answer in production:
+**Both sides carry tests pinning this shape — but they pin it independently, which is the
+flaw** (corrected 2026-07-18; the original text claimed drift "is caught by a red build,"
+and the `region` breach proved otherwise):
 
-- **Provider (`defense-news-classifier`):** a test pins `ClassifyResponse`'s fields and
-  the `category`/`operational_domain` **enums** to `CATEGORIES`/`DOMAINS`, and the API
-  tests assert the 200 body is exactly those two fields and that bad input → 422 /
-  upstream failure → 502. Renaming a field or editing an enum turns the suite red.
-- **Consumer (`kb-agent`):** a test asserts `classify_snippet` parses this 200 shape into
-  its SYS-003 `payload` (`{category, operational_domain}`), and the tool is required to
-  **degrade gracefully on a malformed response** — a body missing a field returns a
-  SYS-003 *error observation* with recovery guidance, never an unhandled exception that
-  crashes the tool-use loop.
+- **Provider (`defense-news-classifier`):** a test pins `ClassifyResponse`'s fields and the
+  enums to `CATEGORIES`/`DOMAINS`, and the API tests assert the 200 body shape plus bad
+  input → 422 / upstream failure → 502. **But the assertion is against the provider's own
+  model**, so when the provider changed, the test changed with it in the same commit
+  (`tests/test_api.py:41,51` now carry `"region"`). It stayed green through a breaking
+  change, which is the correct behavior for a unit test and the wrong behavior for a
+  contract test.
+- **Consumer (`kb-agent`):** a test asserts `classify_snippet` parses the 200 shape into its
+  SYS-003 `payload`, and that a body missing a field degrades to a SYS-003 error observation
+  rather than crashing the loop. **But the 200 body it parses is a hand-written stub the
+  test itself defines** (`tests/test_tools.py:160,275`), so it asserts the consumer matches
+  the consumer's own belief about the provider. It cannot observe the provider changing.
 
-Both repos run these in CI (as do all three code repos now — `defense-news-classifier`,
-`kb-agent`, and `notes-api`), so the contract is enforced on every push, not by memory.
+Both repos run these in CI, so each implementation is enforced against **itself** on every
+push. Neither is enforced against the other. The word "contract" in "contract test" was
+doing work here that the tests were not: the only thing shared between the two suites was an
+assumption, and an assumption does not turn a build red when it becomes false.
+
+**The gap, stated plainly so the fix is unambiguous:** there is no artifact that both repos
+read. Closing it requires one — a committed JSON Schema or golden response fixture, owned by
+one side and asserted against by both, so that a field added on the provider fails the
+consumer's build. Until that exists this section describes two unit suites, not a guard.
 
 **Relationship to SYS-003 (two layers, not a duplicate).**
 
@@ -127,12 +183,17 @@ versioning rule above forces into the open.
 
 ## Consequences
 
-- **Drift is now loud, not silent.** The exact failure the risk register named — the
-  provider changing the wire shape and the agent mis-reading it at runtime — is caught by
-  a red build on whichever side falls out of sync, before it ships.
-- **The `region` change has a defined, gated path.** `v3.0.0` can't sneak in as a minor:
-  the rule names it as the worked breaking example, and lists the three things that must
-  move together (classifier MAJOR + coordinated `kb-agent` update + this ADR).
+- ~~**Drift is now loud, not silent.**~~ **Falsified 2026-07-18.** The exact failure the
+  risk register named — the provider changing the wire shape while the consumer keeps
+  reading the old one — happened, and no build went red on either side. The consequence as
+  originally written described what the author intended the tests to do, not what they
+  assert. Drift is currently **silent**, and the risk register entry claiming otherwise (R8)
+  is corrected in the same pass as this amendment.
+- ~~**The `region` change has a defined, gated path.**~~ **Falsified 2026-07-18.** It had a
+  defined path and no gate. `v3.0.0` did ship with the MAJOR bump the rule demanded, so the
+  half of the rule backed by the classifier's own semver discipline held; the half that
+  required another repo to move had nothing enforcing it. A rule that spans two repos and
+  lives in neither one's build is a convention, whatever the ADR calls it.
 - **The two repos stay decoupled, deliberately.** The seam is still HTTP and
   config-driven, not a shared import or package — each keeps its own environment and
   release cycle. The contract is the coupling; the code is not.
@@ -141,7 +202,10 @@ versioning rule above forces into the open.
   it is a real tax on the provider, paid now while there is exactly one consumer.
 - **The contract must be kept in step with the code.** If `src/api.py` or the enums in
   `src/classify.py` change, this ADR is stale until updated — the same revisit obligation
-  SYS-002 and SYS-003 carry. The contract tests are the tripwire that this happened.
+  SYS-002 and SYS-003 carry. ~~The contract tests are the tripwire that this happened.~~
+  **There was no tripwire.** `src/api.py` changed on 2026-07-18 and this ADR sat stale for
+  the rest of that day until an unrelated audit read it. The revisit obligation was carried
+  by memory, which is the thing ADRs exist to replace.
 
 ## Alternatives Considered
 

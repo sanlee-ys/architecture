@@ -47,17 +47,31 @@ Content-Type: application/json
 
 `CLASSIFIER_URL` is read from the environment. When unset (the default in dev/tests), the
 task is a **no-op** — the enrichment is silently skipped so the API runs without a live
-classifier. The response is the frozen SYS-004 two-field shape:
-`{ "category": "<label>", "operational_domain": "<label>" }`.
+classifier. The response is the SYS-004 shape — **as of the classifier's `v3.0.0`
+(2026-07-18) that is three fields**, `{ "category", "operational_domain", "region" }`, not the
+two recorded when this ADR was written. `region` is currently ignored by this consumer; see the
+[`SYS-004` amendment](SYS-004-classify-http-contract.md) for why that change reached production
+without the coordinated update its own contract required.
 
 **Tag encoding.** The two predicted labels are written as **namespaced tags**:
 `category:<category>` and `domain:<operational_domain>` (e.g. `category:procurement`,
 `domain:air`). The namespace prefixes keep machine tags distinct from a user's own tags
 and let the writeback safely replace only its own prior tags on reprocessing.
 
-**Writeback.** `PUT {notes-api-internal}/notes/{id}/tags` with body `{ "tags": [<string>, …] }`,
-**replace semantics**, returning `200` (the updated note) / `404` (no such note) / `400`
-(validation). The task sends the **merge** of the note's existing non-classifier tags plus
+**Writeback.** *(Mechanism corrected 2026-07-18 — this section described an HTTP call the task
+does not make.)* The background task writes **in-process through the ORM**, not over HTTP: it
+opens a fresh session, loads the note via `NoteService`, merges tags, and commits
+(`notes-api/src/notes_api/tasks.py:175-182`). A fresh session is required because the
+request's session is closed once the response has been sent.
+
+The `PUT /notes/{id}/tags` endpoint described below **does exist** (`notes-api/router.py:68`)
+and carries the same replace semantics for external callers — returning `200` (the updated
+note) / `404` (no such note) / `400` (validation). It is simply not the path the enrichment
+loop takes, and this ADR previously conflated the two. What is frozen here is the **tag
+encoding and replace semantics**; the transport is an implementation detail that differs
+between the internal task and external callers.
+
+The task writes the **merge** of the note's existing non-classifier tags plus
 the two fresh classifier tags — so user tags are preserved and stale classifier tags are
 replaced, never accumulated. The merge is capped at notes-api's 20-tag limit: the two
 classifier tags always land, and the oldest user tags are dropped from *this writeback
