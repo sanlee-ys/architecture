@@ -85,6 +85,7 @@ which is which. It is *not* a ranking — a `Standard` can be more rigorously en
 | [SYS-017](decisions/SYS-017-evals-as-ci.md) | Standard | Make evals-as-CI a system-wide pattern, gated on corpus provenance | Proposed |
 | [SYS-018](decisions/SYS-018-provider-owned-contract-artifacts.md) | Standard | Cross-repo contracts are enforced by a provider-owned artifact both sides assert against | Accepted |
 | [SYS-019](decisions/SYS-019-assert-claims-dont-list-them.md) | Standard | Assert cross-repo claims against a generated artifact; a surface list is a prompt, not a guarantee | Accepted |
+| [SYS-020](decisions/SYS-020-when-a-repo-earns-a-tag.md) | Standard | A repo earns tags when it publishes a number or exposes a contract; every other repo is deliberately untagged | Accepted |
 
 ## Writing a new ADR
 
