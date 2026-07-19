@@ -24,3 +24,13 @@ jobs:
       # This is SYS-018's pattern turned on the decision log itself.
       - name: Lint the decision log
         run: python scripts/lint_decision_log.py
+
+      # Three narrative surfaces here were quoting the classifier's v2 numbers a day
+      # after v3.0.0 shipped. The portfolio already guarded its own copies of these
+      # figures, but that check reads HTML spans in a different repo, so it had no
+      # reach into Markdown prose here. Same failure, same fix, one repo over.
+      #
+      # Fetches the producer's published artifact, so it warns-and-passes on a network
+      # failure rather than reddening an unrelated build.
+      - name: Check prose metrics against the classifier artifact
+        run: python scripts/check_program_metrics.py
