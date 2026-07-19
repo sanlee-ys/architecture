@@ -1,7 +1,7 @@
 # SYS-009: Cascade documentation by altitude — one body of work, a distinct artifact per surface
 
-**Status:** Accepted (amended 2026-07-05: reframings cascade too; decision records name their blast radius; volatility rule for outward surfaces)
-**Date:** 2026-06-27 (accepted 2026-06-29, amended 2026-07-05)
+**Status:** Accepted (amended 2026-07-05: reframings cascade too; decision records name their blast radius; volatility rule for outward surfaces. Amended 2026-07-18: guarantees name their enforcer, everything else is a dated observation)
+**Date:** 2026-06-27 (accepted 2026-06-29, amended 2026-07-05, amended 2026-07-18)
 **Deciders:** San Lee
 
 ---
@@ -83,6 +83,46 @@ marginal" ages perfectly. Plans and organizing framings move with every ADR, so 
 surface that restates one becomes a standing sweep obligation. Restate the slow-moving,
 link the fast-moving. This is prevention where the blast-radius rule is mitigation: prose
 that does not exist cannot drift.
+
+### Guarantees name their enforcer; everything else is a dated observation (amendment, 2026-07-18)
+
+The 2026-07-18 audit found six confidently-wrong claims across the system. Sorting them by
+cause gave one rule, and it is narrower and more useful than "be careful."
+
+Some had been **true when written and were outrun by change** — published accuracy figures,
+a roadmap listing shipped versions, an autonomy rung whose technique was later retired. Those
+are cheap failures: the sentence was honest, the world moved, and nothing pointed back at it.
+
+The dangerous ones had **never been true**, and read as observations because they were written
+beside the thing they described. `SYS-004` said *"both sides now carry contract tests, so a
+drift is caught by a red build."* Tests did exist on both sides. The leap from "tests exist on
+both sides" to "the tests observe each other" is one word wide, invisible unless specifically
+checked, and it stood for a month while the seam it promised to guard was broken. `ADR-002`
+called its redline guard a mechanical backstop; the guard had no behavioural tests. A
+portfolio page claimed CI catches a renamed field; nothing did.
+
+The pattern: **a claim about system behaviour, written at the same moment as the system, feels
+like a description and is actually a prediction.** So:
+
+- **A sentence asserting a guarantee must name the mechanism that produces it** — the check,
+  the gate, the test, the generated artifact. If you cannot name one, you do not get to write
+  the guarantee. "Drift fails the build (`scripts/check_classify_contract.py`, CI)" is a
+  claim a reader can go verify; "drift is caught by a red build" is a hope in the present
+  tense.
+- **A claim you cannot make executable is written as a dated observation, not a guarantee.**
+  "As of 2026-07-18, each side pins the shape in its own suite" ages visibly and stays true
+  as history. Most of what drifted would have been harmlessly stale in that voice.
+- **Prefer generating over restating.** A number retyped from a report is a copy that will
+  eventually disagree with its source; a number asserted against a published artifact cannot.
+  This is [`SYS-018`](SYS-018-provider-owned-contract-artifacts.md) applied to prose, and it
+  is why the classifier now publishes `evals/metrics.json` and the portfolio checks against it
+  rather than proofreading itself.
+
+**This is enforced where it can be.** `scripts/lint_decision_log.py` runs in CI over this log:
+table rows match disk, statuses match headers, cross-links resolve, and no decision claims to
+have foreclosed something with an empty Alternatives table. The rest is a writing convention,
+and it is honest to say so — a convention is exactly the kind of thing this amendment is about
+not trusting, which is why the checkable parts were made checkable first.
 
 ## Consequences
 

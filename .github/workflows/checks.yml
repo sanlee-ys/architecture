@@ -1,0 +1,26 @@
+name: Checks
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  decision-log:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      # The drift classes this catches were previously found by a manual audit
+      # that cost 35 agents and 2.8M tokens: a doc with no row in the log table,
+      # a table status contradicting the document's own header for three weeks,
+      # unresolvable cross-links, and an empty Alternatives table on a decision
+      # that is supposed to have foreclosed something. All mechanically checkable.
+      # This is SYS-018's pattern turned on the decision log itself.
+      - name: Lint the decision log
+        run: python scripts/lint_decision_log.py
