@@ -49,14 +49,22 @@ Content-Type: application/json
 task is a **no-op** — the enrichment is silently skipped so the API runs without a live
 classifier. The response is the SYS-004 shape — **as of the classifier's `v3.0.0`
 (2026-07-18) that is three fields**, `{ "category", "operational_domain", "region" }`, not the
-two recorded when this ADR was written. `region` is currently ignored by this consumer; see the
-[`SYS-004` amendment](SYS-004-classify-http-contract.md) for why that change reached production
-without the coordinated update its own contract required.
+two recorded when this ADR was written. **Corrected 2026-07-19:** this clause previously said
+`region` was "currently ignored by this consumer." That is no longer true — notes-api consumes
+all three fields (`notes-api/src/notes_api/tasks.py:44-48`), merged 2026-07-18. See the
+[`SYS-004` amendment](SYS-004-classify-http-contract.md) for why the field reached production
+ahead of the coordinated update its own contract required.
 
-**Tag encoding.** The two predicted labels are written as **namespaced tags**:
-`category:<category>` and `domain:<operational_domain>` (e.g. `category:procurement`,
-`domain:air`). The namespace prefixes keep machine tags distinct from a user's own tags
-and let the writeback safely replace only its own prior tags on reprocessing.
+**Tag encoding.** The **three** predicted labels are written as **namespaced tags**:
+`category:<category>`, `domain:<operational_domain>`, and `region:<region>` (e.g.
+`category:procurement`, `domain:air`, `region:indo-pacific`). The namespace prefixes keep
+machine tags distinct from a user's own tags and let the writeback safely replace only its own
+prior tags on reprocessing.
+
+The consumer derives its prefixes from the field map rather than hardcoding them
+(`CLASSIFIER_PREFIXES`, `tasks.py:58`), which is why the `v3.0.0` addition required no
+tag-specific code on this side. That is a property worth preserving: a fourth field would
+again cost nothing here.
 
 **Writeback.** *(Mechanism corrected 2026-07-18 — this section described an HTTP call the task
 does not make.)* The background task writes **in-process through the ORM**, not over HTTP: it
@@ -95,9 +103,11 @@ development and test environments that have no live classifier.
 tag-encoding scheme (the `category:`/`domain:` prefixes), or the writeback endpoint's
 shape is a **breaking change to this contract**, requiring a coordinated change across both
 repos landed together **plus** an update to this ADR (a new row or a superseding `SYS-NNN`).
-The classifier's roadmapped `v3.0.0` `region` field would add a third namespaced tag
-(`region:<…>`) and is exactly such a coordinated change — it is gated by SYS-004 (the
-response field) and by this ADR (the tag).
+The classifier's `v3.0.0` `region` field added exactly such a third namespaced tag
+(`region:<…>`), gated by SYS-004 (the response field) and by this ADR (the tag). It
+**shipped 2026-07-18** and is consumed in production. It is retained here as the worked
+example of what this rule governs — and as the case where the coordinated update reached
+production before the record did, which is the failure SYS-018 was written to prevent.
 
 ## Consequences
 
