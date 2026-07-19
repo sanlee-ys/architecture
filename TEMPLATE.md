@@ -25,6 +25,12 @@ Which surfaces restate or depend on what this decision changes — READMEs, port
 sync registries, setup scripts, generated-doc sources? List them; the landing PR sweeps
 them or files a fast-follow (SYS-009). "None" is a valid answer but must be written.
 
+**This list is a prompt for a sweep, not a guarantee that one happened** (SYS-019). If a
+surface restates a fact some repo publishes as an artifact — an eval number, a version, a
+schema — generate it or assert it in CI instead. A list depends on someone reading it at
+the end of the work, which is exactly when attention is lowest; that failure rate is not
+zero, and on 2026-07-19 it was six claims across three repos.
+
 ## Consequences
 
 - **What this makes easier.**

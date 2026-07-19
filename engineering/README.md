@@ -62,7 +62,9 @@ The house style every repo inherits — the conventions that make separate repos
   that **enforcement is the wrong axis to sort a decision log by** — a lint rule that fails
   builds in three repos is still a lint rule.
 
-- **Published figures are asserted, never retyped** — any eval number quoted outside the repo
+- **Published figures are asserted, never retyped** *(the convention half of
+  [`SYS-019`](../decisions/SYS-019-assert-claims-dont-list-them.md), which is the rule)* — any
+  eval number or version claim quoted outside the repo
   that measured it must be checked against that repo's published artifact. The classifier
   publishes [`evals/metrics.json`](https://github.com/sanlee-ys/defense-news-classifier/blob/main/evals/metrics.json);
   a figure opts in with a marker, and CI fails if it drifts.
@@ -71,8 +73,9 @@ The house style every repo inherits — the conventions that make separate repos
   |---|---|
   | **Marker (HTML)** | `<span data-metric="KEY">92.6%</span>` |
   | **Marker (Markdown)** | `category <!-- metric:KEY -->92.6%` — renders invisible |
+  | **Version claims** | `<!-- version:classifier -->**v3.0.0**` — **never** in backticks: code spans are stripped before scanning, so a marker inside them matches nothing |
   | **Keys** | the artifact's `gold` object (`category_accuracy`, `domain_macro_f1`, …) |
-  | **Fails on** | value mismatch · unknown key · zero markers found |
+  | **Fails on** | value mismatch · unknown key · zero markers found · zero of a marker *type* |
   | **Warns and passes on** | artifact fetch failure — an outage must not redden an unrelated build |
 
   **Historical figures are deliberately unmarked.** A v1 baseline or a superseded column is a
