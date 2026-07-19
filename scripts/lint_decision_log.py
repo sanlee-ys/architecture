@@ -53,7 +53,7 @@ README = REPO_ROOT / "README.md"
 LEGACY_NO_DOWNSTREAM = {
     "SYS-001", "SYS-002", "SYS-003", "SYS-004", "SYS-005", "SYS-006",
     "SYS-007", "SYS-009", "SYS-010", "SYS-012",
-    "SYS-013", "SYS-014", "SYS-015",
+    "SYS-013", "SYS-015",
 }
 # SYS-008 and SYS-011 left this list on 2026-07-18 by being re-tiered to
 # architecture/adr/ — the sanctioned direction. The list may only shrink.
@@ -159,14 +159,20 @@ def lint() -> list[str]:
         # after confirming it actually points somewhere — a redirect to nothing is worse
         # than no redirect, because it looks handled.
         if header and _short_status(header.group(1)) == TOMBSTONE_STATUS:
-            targets = [
-                lk for lk in MD_LINK.findall(text)
-                if "/adr/" in lk or lk.lstrip("./").startswith("adr/")
-            ]
+            # A destination is anything OUTSIDE decisions/ — a repo-local ADR tier
+            # (../adr/), a house convention (../engineering/README.md), or another repo.
+            # Deliberately not restricted to adr/: SYS-014 was re-tiered to a convention,
+            # not to an ADR, and a check that only understood one destination shape would
+            # have blocked a correct move. Found by this lint failing on that exact case.
+            # NB: str.lstrip("./") strips CHARACTERS, not a prefix — it turns
+            # "../adr/x.md" into "adr/x.md" and silently eats the "..". Match the raw
+            # link instead. This lint caught its own bug here.
+            targets = [lk for lk in MD_LINK.findall(text) if lk.startswith("../")]
             if not targets:
                 problems.append(
                     f"{rel}: status is '{TOMBSTONE_STATUS}' but no link to a destination "
-                    f"tier was found. A tombstone must name where the decision went."
+                    f"outside decisions/ was found. A tombstone must name where the "
+                    f"decision went, or it is just a dead end."
                 )
             continue
 

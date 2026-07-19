@@ -45,6 +45,23 @@ The house style every repo inherits — the conventions that make separate repos
 - **Tool-layer contract** — one observation shape + error-recovery + an eval gate for agent-callable tools (`SYS-003`).
 - **Eval-as-acceptance** — a change ships when a gate says so, not when it "looks right."
 - **Context-budget discipline** — cap and scope results, cite the source, never dump a document when a chunk answers.
+- **Google-style docstrings in all first-party Python** — `Args:` / `Returns:` / `Raises:` /
+  `Yields:`, one-line imperative summary, **types in annotations and never repeated in the
+  docstring**. Module docstrings required; the house pattern (what the module is, *why* it is
+  shaped that way, a `Run locally:` command where useful) is preserved, not flattened.
+  One-liners are fine where the name and type hints already say it. No NumPy style, no
+  reST/Sphinx field lists. Enforced by `ruff`'s `D` rules with `convention = "google"` in
+  `defense-news-classifier`, `notes-api` and `kb-agent`; tests are exempt (`D1` per-file
+  ignore) and `D105`/`D107` are ignored globally.
+
+  *Re-tiered here from `SYS-014` on 2026-07-18.* It is a **convention**, not a decision, by
+  `SYS-001`'s own definition — its text says it was *"ratifying a de-facto standard, not
+  imposing a new one"*, zero conflicting docstrings existed to convert, and nothing real was
+  foreclosed. It fails prong 2 of the promotion bar. Its CI enforcement is not a
+  counterargument: `SYS-001`'s own correction, written about this exact document, concedes
+  that **enforcement is the wrong axis to sort a decision log by** — a lint rule that fails
+  builds in three repos is still a lint rule.
+
 - **Repo layout the portal depends on** — every app repo keeps `README.md`, `docs/` and
   `decisions/` **at its root, under exactly those names**. `scripts/build_portal.py` copies
   those three and nothing else (`APP_COPIED`, and the `for sub in ("docs", "decisions")` loop

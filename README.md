@@ -79,7 +79,7 @@ which is which. It is *not* a ranking — a `Standard` can be more rigorously en
 | [SYS-011](decisions/SYS-011-generated-roadmap-dashboard.md) | Infra | A generated roadmap dashboard — **re-tiered to [`ADR-002`](adr/ADR-002-generated-roadmap-dashboard.md)** | Moved |
 | [SYS-012](decisions/SYS-012-pages-actions-deployment.md) | Infra | GitHub Pages — deploy via Actions, not the legacy branch build | Accepted |
 | [SYS-013](decisions/SYS-013-self-healing-by-default.md) | Standard | Design services to self-heal — detect and recover before a human has to | Accepted |
-| [SYS-014](decisions/SYS-014-python-docstring-standard.md) | Standard | Google-style docstrings as the Python docstring standard | Accepted |
+| [SYS-014](decisions/SYS-014-python-docstring-standard.md) | Standard | Google-style docstrings — **re-tiered to a house convention** ([`engineering/`](engineering/README.md)) | Moved |
 | [SYS-015](decisions/SYS-015-public-claude-ops-repo.md) | Practice | Publish the Claude operating layer as a public repo (claude-ops) | Accepted |
 | [SYS-016](decisions/SYS-016-agent-tool-seam-threat-model.md) | Security | Threat model for the agent tool seam — as a regulated deployment | Accepted |
 | [SYS-017](decisions/SYS-017-evals-as-ci.md) | Standard | Make evals-as-CI a system-wide pattern, gated on corpus provenance | Proposed |
