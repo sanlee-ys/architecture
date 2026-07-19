@@ -87,7 +87,13 @@ UNMARKED_ALLOWED = {
     # widening it to bare integers would flag every count, date and version in the file.)
     "product/one-pager.md": 1,
     "case-study/README.md": 0,
-    "program/README.md": 0,
+    # The two v2.1.0 SCALED-eval accuracies (93.3% category, 90.3% domain, n=300 judge-
+    # graded). They are real measurements but they are not in this artifact, which
+    # publishes the n=54 human gold set only - marking them against it would assert a
+    # number against the wrong measurement, which is worse than leaving them unchecked.
+    # They belong to `evals/scale_eval.txt`; if that is ever published as an artifact
+    # too, this allowance should drop back to 0.
+    "program/README.md": 2,
     "engineering/README.md": 0,
     "README.md": 0,
 }
@@ -108,6 +114,19 @@ METRIC_SHAPED = re.compile(r"\b\d{1,3}\.\d%|\b0\.\d{3}\b")
 # that matches nothing and reports drift against itself. Found by this check failing on
 # its own first run.
 MARKER = re.compile(r"<!--\s*metric:([A-Za-z0-9_]+)\s*-->\s*\**\s*(\d+(?:\.\d+)?%?)")
+
+# Version claims, same idea one field over: `<!-- version:classifier -->**`v3.0.0`**`
+# asserts against the artifact's own `version`. Added 2026-07-19 after the roadmap was
+# found advertising the classifier at v2.0.0 (it was v3.0.0) and listing an already-shipped
+# v2.1.0 under "Next". The metrics guard could not see either: it checks NUMBERS, and a
+# version string is a status claim. Same failure class, different field - so it gets the
+# same treatment rather than a promise to be careful.
+# NB: do NOT wrap a marked version in backticks in the prose. Code spans are stripped
+# before scanning (see CODE above), so `v3.0.0` would be removed and this marker would
+# match nothing — a check that silently verifies nothing. That happened on this very
+# change: the first draft used **`v3.0.0`** and reported OK against injected drift.
+# The zero-marker guard in main() now makes that failure loud instead of invisible.
+VERSION_MARKER = re.compile(r"<!--\s*version:classifier\s*-->\s*\**\s*v?(\d+\.\d+\.\d+)")
 
 
 def fetch_artifact(url: str) -> dict | None:
@@ -144,8 +163,10 @@ def scan() -> tuple[list[str], int, dict[str, list[str]]]:
 
     published = artifact.get("gold", {})
     known = set(published)
+    artifact_version = str(artifact.get("version", ""))
     problems: list[str] = []
     marked = 0
+    versions_checked = 0
     unmarked: dict[str, list[str]] = {}
 
     for rel in SCANNED:
@@ -156,6 +177,16 @@ def scan() -> tuple[list[str], int, dict[str, list[str]]]:
         # Code spans hold examples, not claims. Strip them before anything else so the
         # page documenting the convention is not read as using it.
         text = CODE.sub("", path.read_text(encoding="utf-8"))
+
+        for shown in VERSION_MARKER.findall(text):
+            marked += 1
+            versions_checked += 1
+            if shown != artifact_version:
+                problems.append(
+                    f"{rel}: the classifier is described as v{shown} but the published "
+                    f"artifact is v{artifact_version}. A version claim goes stale the "
+                    f"same way a number does, and reads as current the same way."
+                )
 
         for key, shown in MARKER.findall(text):
             if key not in known:
@@ -189,6 +220,18 @@ def scan() -> tuple[list[str], int, dict[str, list[str]]]:
                 f"figure that must not track the artifact - raise the allowance in "
                 f"UNMARKED_ALLOWED and say why in the comment there."
             )
+
+    # Per-marker-type liveness. The overall "zero markers" guard in main() is not enough:
+    # 16 healthy metric markers happily masked a version check that matched nothing at all
+    # because its example was written inside backticks. A marker TYPE that verifies nothing
+    # reads as coverage exactly as loudly as one that works.
+    if versions_checked == 0:
+        problems.append(
+            "No <!-- version:classifier --> marker matched in any scanned file. Either "
+            "the marker was dropped, or it is wrapped in backticks (code spans are "
+            "stripped before scanning, so the marker never matches). Both are failures: "
+            "this check would silently verify nothing."
+        )
 
     return problems, marked, unmarked
 
