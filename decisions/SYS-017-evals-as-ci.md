@@ -19,10 +19,12 @@ picked up.
 Three symptoms of the missing record, all found on 2026-07-18:
 
 - **`SYS-007` is not the evals-as-CI decision.** It is the engineering-substrate and AI-skill map.
-  ADR-007 cites it as one, and so do
-  [`SYS-008`](SYS-008-documentation-portal.md) line 42 (which instead says `SYS-003`) and
-  `portal_src/telemetry.md` line 13. Three surfaces, two different wrong numbers, because there
-  was no right number to cite.
+  ADR-007 cites it as one, and so did the documentation-portal decision (which instead said
+  `SYS-003`) and `portal_src/telemetry.md` line 13. Three surfaces, two different wrong numbers,
+  because there was no right number to cite. *(The portal decision was `SYS-008` when this was
+  written; it is now [`ADR-001`](../adr/ADR-001-documentation-portal.md), and the citation there
+  is corrected. Line numbers dropped — a locator into a file that is still being edited goes
+  stale on its own.)*
 - **`learning-notes/glossary.md` propagated the error into an agent-readable corpus.** It
   described evals-as-CI as an unbuilt milestone owned by SYS-007. `kb-agent` indexes that file,
   so the wrong citation was retrievable and speakable. Corrected in
@@ -118,8 +120,9 @@ or model-version drift actually make the gate flap. It is not a prerequisite for
   on disk and is cited from `engineering/README.md` and `SYS-007` but was never added to the table.
   The table currently stops at `SYS-015`, so it silently skips a number.~~ **Done** — the table now
   runs through `SYS-017` and carries a `Kind` column (2026-07-18).
-- **`SYS-008-documentation-portal.md:42`** — cites "`SYS-003` evals-as-CI". `SYS-003` is the
-  agent-tool-layer contract. Repoint to this ADR.
+- ~~**`SYS-008-documentation-portal.md:42`** — cites "`SYS-003` evals-as-CI". `SYS-003` is the
+  agent-tool-layer contract. Repoint to this ADR.~~ **Done** — that decision was re-tiered to
+  [`ADR-001`](../adr/ADR-001-documentation-portal.md) on 2026-07-18 and now cites this ADR.
 - **`portal_src/telemetry.md:13`** — cites "evals-as-CI (`SYS-007`, the keystone)". Repoint here.
 - **`classifier/ADR-007`** — remains canonical for the classifier's own two-gate design and is not
   superseded; its forward-reference to "the cross-repo SYS-007 evals-as-CI initiative" is the

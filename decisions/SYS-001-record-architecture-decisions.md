@@ -136,7 +136,9 @@ renumbered, demoted, or superseded on account of a rule written after them.~~ **
 > demotions. Adversarial reviewers killed all five by citing this clause — a procedural
 > objection, applied to a rule the owner had already authorized suspending, which meant the
 > merits were never argued. Re-run on merits alone, three of the five moved: `SYS-008` and
-> `SYS-011` fail prong 1 (they are this repo's own build features), and `SYS-014` fails prong
+> `SYS-011` fail prong 1 (they are this repo's own build features, and are now
+> [`ADR-001`](../adr/ADR-001-documentation-portal.md) and
+> [`ADR-002`](../adr/ADR-002-generated-roadmap-dashboard.md)), and `SYS-014` fails prong
 > 2 on its own testimony, describing itself as *"ratifying a de-facto standard, not imposing a
 > new one."* A clause that blocks correct outcomes on procedure is doing the opposite of its
 > job.

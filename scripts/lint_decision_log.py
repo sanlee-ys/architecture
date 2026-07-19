@@ -24,7 +24,14 @@ Checks
 4. Relative Markdown links between decision docs resolve.
 5. Every doc has a non-empty `Alternatives Considered` table (the promotion bar's
    second prong is "it forecloses something" — an empty table means it doesn't).
-6. Every doc has a `## Downstream surfaces` section, RATCHETED: docs listed in
+6. Relative links in the `adr/` tier resolve too. Re-tiering moves a document out from
+   under every relative link inside it, and `ADR-001` shipped with exactly that break.
+7. No file anywhere in the repo cites a RETIRED number without naming where it went. A
+   mention is fine as long as the same file also names the successor, which is what
+   distinguishes a tombstone, a log row or a footnoted historical record from a surface
+   nobody swept. Added after the 2026-07-18 re-tiering left five stale citations behind,
+   two of them rendered to readers, with this lint green the whole time.
+8. Every doc has a `## Downstream surfaces` section, RATCHETED: docs listed in
    ``LEGACY_NO_DOWNSTREAM`` are grandfathered, and the check fails if a doc *not*
    on that list is missing one. New documents must comply; the list may only
    shrink. This mirrors `SYS-001`'s non-retroactivity clause — fix the rule
@@ -44,7 +51,17 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 DECISIONS = REPO_ROOT / "decisions"
+ADRS = REPO_ROOT / "adr"
 README = REPO_ROOT / "README.md"
+
+# Directories that are generated, vendored or bytecode. The retired-citation sweep walks the
+# whole repo, so it has to skip anything it does not own — a stale number inside `portal/` is
+# a copy of a source file already being checked, and "fixing" it would be fixing build output.
+SKIP_DIRS = {"portal", "site", "graphify-out", "__pycache__", ".git", "node_modules"}
+# Text files worth sweeping. Deliberately includes the long tail (.gitignore has no suffix, and
+# that is exactly where a stale citation hid) rather than just Markdown.
+SWEEP_SUFFIXES = {".md", ".py", ".yml", ".yaml", ".html", ".json", ".toml", ".cjs", ".js", ".css"}
+SWEEP_NAMES = {".gitignore", ".gitattributes"}
 
 # Documents predating the mandatory "Downstream surfaces" section. SYS-001's own
 # shape list omitted it until 2026-07-18, so an author following the practice
@@ -55,8 +72,8 @@ LEGACY_NO_DOWNSTREAM = {
     "SYS-007", "SYS-009", "SYS-010", "SYS-012",
     "SYS-013", "SYS-015",
 }
-# SYS-008 and SYS-011 left this list on 2026-07-18 by being re-tiered to
-# architecture/adr/ — the sanctioned direction. The list may only shrink.
+# SYS-008 and SYS-011 left this list on 2026-07-18 by being re-tiered to `adr/ADR-001` and
+# `adr/ADR-002` — the sanctioned direction. The list may only shrink.
 
 ROW = re.compile(r"^\|\s*\[(SYS-\d+)\]\(([^)]+)\)\s*\|(.*)\|\s*$")
 STATUS = re.compile(r"^\*\*Status:\*\*\s*(.+?)\s*$", re.MULTILINE)
@@ -107,6 +124,82 @@ def _short_status(raw: str) -> str:
         if word in lowered:
             return word
     return lowered.strip()
+
+
+def _sweep_files() -> list[Path]:
+    """Every first-party text file in the repo, skipping generated and vendored trees."""
+    found: list[Path] = []
+    for path in REPO_ROOT.rglob("*"):
+        if not path.is_file():
+            continue
+        if SKIP_DIRS & set(path.relative_to(REPO_ROOT).parts):
+            continue
+        if path.suffix in SWEEP_SUFFIXES or path.name in SWEEP_NAMES:
+            found.append(path)
+    return sorted(found)
+
+
+def _retired() -> dict[str, list[str]]:
+    """Map each retired SYS id to the markers that prove a citation knows it moved.
+
+    A tombstone's Status line names where the decision went — an `ADR-NNN` for a re-tier
+    into `adr/`, or a destination path for a lift into a convention. Either token counts
+    as a successor marker.
+    """
+    retired: dict[str, list[str]] = {}
+    for path in sorted(DECISIONS.glob("SYS-*.md")):
+        text = path.read_text(encoding="utf-8")
+        header = STATUS.search(text)
+        if not header or _short_status(header.group(1)) != TOMBSTONE_STATUS:
+            continue
+        status = header.group(1)
+        markers = re.findall(r"ADR-\d+", status)
+        markers += [Path(lk).name for lk in MD_LINK.findall(status)]
+        retired["-".join(path.name.split("-")[:2])] = markers
+    return retired
+
+
+def check_retired_citations() -> list[str]:
+    """Flag files citing a retired SYS number without acknowledging where it went.
+
+    The rule is deliberately loose: a file may cite `SYS-008` freely **as long as the same
+    file also names its successor somewhere**. That is what separates a legitimate mention
+    — a tombstone, a log-table row, a dated record with a footnote, an "ADR-001, then
+    SYS-008" historical form — from a surface that simply never got swept.
+
+    This exists because the 2026-07-18 re-tiering left five stale citations behind, two of
+    them rendered to readers (a public portfolio page, and a string emitted into the
+    deployed portal). The lint was green throughout: it read `decisions/` and the log table,
+    so it verified the log was internally consistent and said nothing about the rest of the
+    repo citing it. Same shape as the drift it was written to catch.
+    """
+    problems: list[str] = []
+    retired = _retired()
+    if not retired:
+        return problems
+
+    for path in _sweep_files():
+        rel = path.relative_to(REPO_ROOT).as_posix()
+        try:
+            text = path.read_text(encoding="utf-8")
+        except (UnicodeDecodeError, OSError):
+            continue
+        for sys_id, markers in retired.items():
+            if sys_id not in text:
+                continue
+            # A tombstone is exempt for its OWN number: its whole job is to carry that number.
+            # (Match on the filename prefix, not on `rel == sys_id` — the file is
+            # `SYS-011-generated-roadmap-dashboard.md`, not `SYS-011`.)
+            if path.name.startswith(sys_id) or any(m and m in text for m in markers):
+                continue
+            hint = markers[0] if markers else "its successor"
+            problems.append(
+                f"{rel}: cites retired '{sys_id}' and never names where it went "
+                f"(expected a mention of '{hint}' somewhere in the file). Either repoint "
+                f"it, or, if the mention is a dated historical record, say so in the "
+                f"file so the citation reads as history rather than as current structure."
+            )
+    return problems
 
 
 def lint() -> list[str]:
@@ -195,6 +288,24 @@ def lint() -> list[str]:
                 f"may only shrink."
             )
 
+    # The repo-local ADR tier. It gets the link check only — it has no index table to drift
+    # against — but that is the check it needed: `ADR-001` shipped with a relative link to
+    # `SYS-017-evals-as-ci.md` that resolved from `decisions/`, where the text used to live,
+    # and not from `adr/`, where it now does. Re-tiering moves a file out from under every
+    # relative link in it, and nothing was checking the destination tier.
+    for path in sorted(ADRS.glob("ADR-*.md")):
+        text = path.read_text(encoding="utf-8")
+        rel = f"adr/{path.name}"
+        if not STATUS.search(text):
+            problems.append(f"{rel}: no **Status:** header.")
+        for link in MD_LINK.findall(text):
+            if (path.parent / link).resolve().exists():
+                continue
+            if (REPO_ROOT / link).resolve().exists():
+                continue
+            problems.append(f"{rel}: relative link '{link}' does not resolve.")
+
+    problems.extend(check_retired_citations())
     return problems
 
 
@@ -224,9 +335,12 @@ def main() -> int:
         return 1
 
     total = len(list(DECISIONS.glob("SYS-*.md")))
+    adrs = len(list(ADRS.glob("ADR-*.md")))
+    swept = len(_sweep_files())
     print(
-        f"OK - decision log clean. {total} documents, table in sync, statuses "
-        f"match, links resolve, alternatives present."
+        f"OK - decision log clean. {total} SYS + {adrs} ADR documents, table in sync, "
+        f"statuses match, links resolve, alternatives present; {swept} files swept for "
+        f"retired-number citations."
     )
     return 0
 
