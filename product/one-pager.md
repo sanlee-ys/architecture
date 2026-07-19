@@ -61,11 +61,16 @@ distinct technique, demonstrated inside one coherent system rather than as scatt
 **AI-quality (proves the system can be *measured*, not just demoed):**
 
 - **Classification quality** — per-field [precision / recall / F1](https://sanlee-ys.github.io/learning-notes/03-reading-the-numbers.html). Baseline from the existing
-  classifier eval: operational-domain **97.3%**; category **~79%**, with the ceiling set by
-  *label ambiguity* (industry vs. procurement), not model horsepower — see `classifier/ADR-001`
-  and `system/SYS-002`. *Update (v2): re-measured on real, human-labeled text, category is now
-  **88.9%** (macro-F1 0.906) and operational-domain **88.9%** (macro-F1 0.894) — the ceiling is
-  still label ambiguity, not model horsepower.*
+  classifier eval. The v1 baseline was synthetic text (operational-domain 97.3%, category ~79%),
+  with the ceiling set by *label ambiguity* (industry vs. procurement), not model horsepower —
+  see `classifier/ADR-001` and `system/SYS-002`. **Current, at `v3.0.0` on the n=54 human gold
+  set:** category <!-- metric:category_accuracy -->**92.6%** (macro-F1
+  <!-- metric:category_macro_f1 -->**0.911**), operational-domain
+  <!-- metric:domain_accuracy -->**92.6%** (macro-F1 <!-- metric:domain_macro_f1 -->**0.933**),
+  region <!-- metric:region_accuracy -->**87.0%** (macro-F1
+  <!-- metric:region_macro_f1 -->**0.927**). The ceiling is still label ambiguity, not model
+  horsepower — and two escalations have now been measured and *declined* on that basis
+  (`classifier/ADR-012`, `classifier/ADR-013`).
 - **Retrieval quality (RAG)** — recall@k, answer groundedness, citation correctness.
 - **Agent task success** — pass rate on a fixed evaluation set.
 - **Regression gate** — an eval pass-rate threshold wired into CI; a change that drops below it

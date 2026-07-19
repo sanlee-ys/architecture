@@ -135,11 +135,15 @@ or model-version drift actually make the gate flap. It is not a prerequisite for
   It has seven ADRs, `ADR-001` through `ADR-007`.)* The instantiation work (gate script, floors
   file, CI job, `notes_dirs` override) should therefore land as a repo-local ADR in
   `kb-agent/decisions/`, citing this one — not ride this ADR as originally written.
-- **`portfolio/projects/product-and-program.html:113`** — states evals-as-CI runs "across all three
+- ~~**`portfolio/projects/product-and-program.html:113`** — states evals-as-CI runs "across all three
   code repos." False today; it runs in one. Public surface, so it should be corrected regardless of
-  whether this ADR is accepted.
-- **`sanlee-ys/README.md:27`** — cites 88.9%, a v2-era number; `v3.0.0` shipped 92.6%. Adjacent
-  staleness in the same public claim-surface, flagged not fixed here.
+  whether this ADR is accepted.~~ **Done** — corrected on the portfolio, and a *second* instance of
+  the same overclaim was found and fixed in `program/README.md`'s risk R6 on 2026-07-19.
+- ~~**`sanlee-ys/README.md:27`** — cites 88.9%, a v2-era number; `v3.0.0` shipped 92.6%. Adjacent
+  staleness in the same public claim-surface, flagged not fixed here.~~ **Done** — the profile
+  README now reads 92.6% / 92.6% / 87.0%. *Ticked 2026-07-19, having been fixed earlier without
+  the box being checked: the mirror image of the failure this ADR records, and the reason
+  `scripts/check_program_metrics.py` now enforces the numbers mechanically rather than by list.*
 - **`learning-notes/glossary.md`** — already corrected in
   [learning-notes#38](https://github.com/sanlee-ys/learning-notes/pull/38). Listed because it is the
   surface that proved the citation rot reaches an agent-readable corpus.
