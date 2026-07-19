@@ -25,8 +25,10 @@ checked out, so local and published builds share one code path.
 """
 from __future__ import annotations
 
+import os
 import re
 import shutil
+import stat
 import tomllib
 from pathlib import Path
 from urllib.parse import urlparse
@@ -160,9 +162,28 @@ def aggregate_tree(repo_folder: str, repo_root: Path, src: Path, dest: Path, rel
             shutil.copy2(child, out)
 
 
+def _force_writable(func, path, _exc) -> None:
+    """rmtree error handler: clear the read-only bit and retry once.
+
+    On Windows a read-only directory cannot be removed at all, and `git` sets that
+    bit on files it copies out of some checkouts — so a portal/ left over from a
+    previous run makes the next build die with WinError 5 (Access is denied) on a
+    directory that is otherwise empty. It bit twice on 2026-07-19 and both times
+    the fix was clearing the attribute by hand, which is a build step masquerading
+    as a chore.
+
+    CI never hits this (fresh checkout, no leftover portal/), which is exactly why
+    it survived: the failure only reaches the one person running the build locally,
+    and it looks like a permissions problem with their machine rather than a bug in
+    the script.
+    """
+    os.chmod(path, stat.S_IWRITE)
+    func(path)
+
+
 def reset_portal() -> None:
     if PORTAL.exists():
-        shutil.rmtree(PORTAL)
+        shutil.rmtree(PORTAL, onexc=_force_writable)
     PORTAL.mkdir(parents=True)
 
 
