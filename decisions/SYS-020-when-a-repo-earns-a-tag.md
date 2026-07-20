@@ -109,7 +109,7 @@ Revisit if a content repo ever gains a consumer — e.g. if something starts imp
 repo starts publishing figures. The rule is about consumers and claims, not about repo size
 or effort invested.
 
-## Alternatives considered
+## Alternatives Considered
 
 | Option | Reason not chosen |
 |---|---|
