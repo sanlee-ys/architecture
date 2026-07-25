@@ -54,10 +54,12 @@ Four requirements, each traceable to a break above:
 2. **Verify at adoption with a live end-to-end run, and record it.** Not a dry run, not a green
    check — an actual artifact produced by the real trigger, on the real repo. The adopting PR or
    ADR records what was observed. *(Breaks 2 and 3.)*
-3. **Enforce advisory status mechanically.** A lane that is *meant* to be non-blocking must
-   carry `continue-on-error: true` (or equivalent). Intent recorded in prose is not enforcement;
-   an infrastructure failure otherwise reddens a PR whose real gates are green, which teaches
-   exactly the habit — red is negotiable — that the deterministic gates depend on not existing.
+3. **Enforce advisory status mechanically — at the _step_, not the job.** A lane that is *meant*
+   to be non-blocking must carry `continue-on-error: true` **on the step that can fail**. Intent
+   recorded in prose is not enforcement; an infrastructure failure otherwise reddens a PR whose
+   real gates are green, which teaches exactly the habit — red is negotiable — that the
+   deterministic gates depend on not existing. **The placement is the whole requirement, and this
+   decision originally got it wrong — see Amendment 1.**
 4. **Guard the trigger surface, because the platform's defaults are asymmetric.** On GitHub,
    `pull_request` from a fork **fails closed** (secrets withheld). `issue_comment` **fails open**
    — it runs in the base repo's context *with* secrets regardless of who commented, so on a
@@ -75,14 +77,78 @@ adoption** — the one moment when the difference between "working" and "silentl
 cheaply observable — and it says plainly that continuous assurance is not provided. Naming that
 bound is the point; `SYS-019`'s failure mode was a check believed to cover more than it did.
 
+## Amendment 1 (2026-07-25) — requirement 3 named a mechanism that does not do the job
+
+Requirement 3 as adopted said a non-blocking lane "must carry `continue-on-error: true`", without
+saying **where**. Both adopting repos put it on the **job**. That does not achieve the
+requirement's own stated goal.
+
+`jobs.<id>.continue-on-error` prevents a failing job from failing the **workflow run**.
+`jobs.<id>.steps[*].continue-on-error` prevents a failing step from failing the **job**. Only the
+second one governs the conclusion that GitHub publishes as a **check run** — and the check run is
+what appears in the PR's checks list, what `gh pr checks` reads, and what a human sees as a red X.
+Job-level placement greens the run while leaving the check red, which is precisely the
+"infrastructure failure reddens a PR whose real gates are green" outcome the requirement exists to
+prevent.
+
+Measured on `defense-news-classifier` PR #123 (run `30141009937`), a Dependabot bump the action
+refused with *"Workflow initiated by non-human actor"*:
+
+| Surface | Conclusion |
+|---|---|
+| Workflow **run** (`actions/runs/30141009937`) | `success` |
+| **Check run** `review` (what the PR shows) | **`failure`** |
+
+`gh pr checks 123` printed `review fail` and exited 1. Every Dependabot PR in both adopting repos
+carried a red X while both repos' ADRs asserted the PR stayed green.
+
+**Corroboration this was a placement error, not a platform surprise:** `portfolio`'s review lane —
+older than either adopting repo's, and not consulted when this decision was written — already put
+`continue-on-error` on the action **step**, with an inline comment reading *"so the NEXT step
+decides this job's colour."* The correct mechanism was in the system before this decision
+generalised the wrong one. That is the finding worth keeping: **this decision was written from the
+two newest instances and skipped the oldest**, and the oldest was the one that had already solved
+requirement 3.
+
+Two second-order notes:
+
+- **A red X was the visible symptom; the invisible one is worse.** Because job-level placement
+  greened the *run*, `gh run list --branch main` reported success — the surface a session
+  pre-flight actually reads. This defect was self-concealing on exactly the check that would have
+  caught it.
+- **This is `SYS-021`'s own thesis turned on itself.** The decision says a green pipeline is never
+  evidence that an agentic lane works. Requirement 3 was adopted on the strength of a green run
+  conclusion and never verified against the check-run conclusion — the same class of error, one
+  level up, in the decision that names the class.
+
+**What changed:** requirement 3 now specifies step-level placement. Job-level `continue-on-error`
+is not forbidden — it is a reasonable backstop for a non-step failure (runner death, a failing
+`checkout`) and both repos keep it — but it does not satisfy requirement 3 on its own.
+
+**Not claimed:** that step-level placement makes a lane unconditionally green. A lane may still
+deliberately go red — `portfolio`'s classify step reddens when a tool denial *silenced* the review
+(its `ADR-005`), which is a verdict about CI health, not about the PR. Requirement 3 governs
+*accidental* red, not designed red.
+
 ## Downstream surfaces
 
-- **`defense-news-classifier/decisions/016-claude-code-action-pr-review.md`** — the first
-  instance and the source of all three breaks. It already records them repo-locally; this
-  decision generalises them. No edit needed.
-- **`defense-news-classifier/.github/workflows/claude-review.yml`** — compliant as of
-  2026-07-24 (tools granted, `continue-on-error`, `author_association` guard, verified live).
-- **`kb-agent`** — second instance, adopted alongside this decision. Same four requirements.
+- **`portfolio/.github/workflows/claude-review.yml` + `portfolio/decisions/ADR-005`** — **the
+  oldest agentic lane in the system (2026-07-13), and omitted from this decision as adopted.**
+  That omission is Amendment 1's root cause: this lane already placed `continue-on-error` on the
+  step and routed the job's colour through a dedicated classify step, which is the requirement-3
+  mechanism the two newer instances lacked. Counted here as an instance from now on; its `ADR-005`
+  is the reference implementation. **`ADR-005` is not superseded** — it goes further than
+  requirement 3 by distinguishing designed red from accidental red.
+- **`defense-news-classifier/decisions/016-claude-code-action-pr-review.md`** — the source of all
+  three original breaks. **Edited 2026-07-25** (Amendment 1): its Dependabot note asserted the run
+  "reports success and the PR stays green", which the check-run conclusion contradicts.
+- **`defense-news-classifier/.github/workflows/claude-review.yml`** — **amended 2026-07-25**:
+  `continue-on-error` moved to the action step, bot actors skipped at the `if`. Was recorded as
+  "compliant as of 2026-07-24" on the strength of a green run conclusion; that compliance claim was
+  wrong for requirement 3.
+- **`kb-agent/decisions/ADR-008` + `kb-agent/.github/workflows/claude-review.yml`** — second
+  instance. **Both amended 2026-07-25**, same defect, same fix; its ADR carried the same
+  "continue-on-error turns that exit-1 step into a green job" claim.
 - **`engineering/README.md`** — the house CI conventions live there. This decision is the rule
   those conventions instantiate for agentic lanes specifically; a pointer belongs there when
   that file is next revised. **Not edited here** — deliberately, so this decision is not itself
@@ -109,9 +175,17 @@ bound is the point; `SYS-019`'s failure mode was a check believed to cover more 
   goes silently mute *later* (an expired key, a changed default, a revoked scope). Two of the
   three breaks would recur invisibly. Accepted for now because the failure is
   degraded-advice, not wrong-advice, and the lane is advisory by construction.
-- **Revisit when:** a third agentic lane lands, or when one is ever promoted from advisory to
+- **A second accepted hole, found by Amendment 1:** requirement 3 is verified by *reading the
+  workflow file*, and reading it is what produced a wrong compliance claim for two repos. The
+  check that would settle it mechanically is one line — `gh pr checks <n>` on a PR where the lane
+  failed — but it needs a failure to exist, so it cannot run on demand. Nothing here asserts
+  step-level placement; a future lane can regress it the same way. Named rather than papered over,
+  per the `SYS-019` tension note above.
+- **Revisit when:** a **fourth** agentic lane lands, or when one is ever promoted from advisory to
   gating. Gating changes the risk calculus entirely — a silently-muted *gate* is a hole in the
-  build, not a missing opinion — and this decision does not authorise that promotion.
+  build, not a missing opinion — and this decision does not authorise that promotion. (The
+  third-lane trigger as written has already fired retroactively: `portfolio` was the third lane and
+  predated the other two. Amendment 1 is that revisit.)
 
 ## Alternatives Considered
 
