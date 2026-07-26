@@ -60,14 +60,16 @@ The organizing meta-skill — the thing that's genuinely new and that nothing in
 > → evals. Spec → rubric. Project plan → milestone with a confidence interval. Monitoring → drift
 > detection. Naming that mutation *per role* is the skill.
 
-The map — five clusters, what each means per track, and **where it already lives in this system**
+The map — six clusters (five at decision time; **Baselines & build-vs-buy** was added
+2026-07-26, see Addenda), what each means per track, and **where it already lives in this system**
 (grounding it in real artifacts, per house style, to keep R4 at bay):
 
 | Skill cluster | Engineering (substrate) | Program (TPM) | Product (PM) | Already in the system |
 |---|---|---|---|---|
-| **Evals & quality bars** *(keystone)* | Golden sets, LLM-as-judge, regression gates in CI | Own the org-wide "good enough to ship" bar | Author the rubric — *what* "good" means | classifier eval (v2: 88.9% / 88.9%; v1 was 97.3% / ~79%); `SYS-003` eval gate; evals-as-CI (R6) |
+| **Evals & quality bars** *(keystone)* | Golden sets, LLM-as-judge, regression gates in CI | Own the org-wide "good enough to ship" bar | Author the rubric — *what* "good" means | classifier eval (v2: 88.9% / 88.9%; v1 was 97.3% / ~79%); `SYS-003` eval gate; evals-as-CI (R6); the autonomy ladder's A/B/C split, where a held-out set the loop is never allowed to read **vetoed the loop's own best iteration** (`classifier/ADR-018`) |
+| **Baselines & build-vs-buy** | Fit the classical model you are *not* going to ship, in order to price the one you are; paired significance tests instead of eyeballed deltas | Put a number under build-vs-buy before funding the expensive option | Decide whether the feature needs a model at all, or whether the cheap thing *is* the product | **Classical bake-off shipped** (`classifier/ADR-017`, 2026-07-25) — TF-IDF + logistic regression trained and scored against the same human gold set the LLM is scored on. The LLM wins 92.6% vs 72.2% on category and 92.6% vs 66.7% on domain, paired exact McNemar p=0.013 and p=0.0005, against a baseline that costs $0.00 and classifies the set in 4.8 ms. Rung 2 of the autonomy ladder then wrapped that same baseline (`classifier/ADR-018`) |
 | **Context engineering & memory** | Window budgeting, retrieval, chunk/result caps | Plan context/data dependencies across teams | System prompt + memory as a versioned surface | `kb-agent` RAG; `SYS-003` rule 4 (context-budget discipline) |
-| **Agents & orchestration** | Tool design, workflows-vs-agents, retries, HITL | Manage nondeterministic delivery (confidence, not dates) | Design for the failure case; trust & correction UX | `kb-agent` manual tool-use loop; `SYS-003` tool-layer contract |
+| **Agents & orchestration** | Tool design, workflows-vs-agents, retries, HITL | Manage nondeterministic delivery (confidence, not dates) | Design for the failure case; trust & correction UX | `kb-agent` manual tool-use loop; `SYS-003` tool-layer contract; **the classifier's autonomy ladder, L1–L4, built and measured end to end** — two single-agent loops with an explicit done-signal (`classifier/ADR-005`, `ADR-018`) and a triage→classify→critic pipeline whose critic can hand a label *backward* (`classifier/ADR-020`). Both top rungs measured negative and were declined; see Addenda |
 | **Observability, cost & reliability** | Tracing across agent steps, token/latency/drift | Capacity & inference unit-economics planning | Latency↔quality, cost-per-query as product calls | **OTel tracing shipped across all three services** — `kb-agent` loop, classifier `/classify`, `notes-api` enrichment seam (opt-in, GenAI/HTTP semconv — see Addenda); `SYS-002` model-tier; R7. Drift detection over the traces is the remaining leg |
 | **Security, safety & governance** | Prompt injection, tool-exfiltration surface, output hardening | Responsible-AI review gates, launch risk | Transparency, uncertainty, kill-switches in UX | **Threat model documented** ([`SYS-016`](SYS-016-agent-tool-seam-threat-model.md), 2026-07-15) — the tool seam modeled as a regulated deployment; the tenancy + audit controls it names are roadmapped, not built |
 
@@ -211,3 +213,58 @@ and isolates the two that only exist at the regulated boundary — **multi-tenan
 substrate. Honest marker: the cluster moves from `⬜ gap` to **threat model documented; controls
 roadmapped**, *not* `✅ done` — a documented threat model closes "no threat model," not "the controls
 are built." With that, every cluster on the map is at least `🔄`; none is a bare `⬜`.
+
+## Addendum — 2026-07-26: a sixth cluster, and the gap it closes
+
+The map shipped with a blind spot that took a year to become visible: **all five clusters were
+LLM-era.** Every one of them measures something about a language model or the system around it.
+None of them asked whether the language model was the right tool, and the portfolio had the same
+hole in the same shape — three measured-and-declined results
+([`ADR-012`](https://github.com/sanlee-ys/defense-news-classifier/blob/main/decisions/012-retire-bm25-grounding.md)
+grounding,
+[`ADR-013`](https://github.com/sanlee-ys/defense-news-classifier/blob/main/decisions/013-decline-tiered-routing.md)
+tiered routing, and judge-tier escalation in `faithfulness-judge`), each of them pricing a spend
+*layered on top of* the LLM, none of them pricing the LLM itself.
+
+That closed on 2026-07-25 with
+[`classifier/ADR-017`](https://github.com/sanlee-ys/defense-news-classifier/blob/main/decisions/017-classical-baseline-bakeoff.md):
+TF-IDF into logistic regression, trained on 300 judge-graded snippets and scored once against the
+same 54 human-labeled rows the LLM is scored on. The LLM won decisively — 92.6% vs 72.2% on
+category, 92.6% vs 66.7% on domain, paired exact McNemar at p=0.013 and p=0.0005 — against a
+baseline that costs nothing and classifies the whole set in 4.8 ms. Frozen report:
+[`evals/baseline_eval.txt`](https://github.com/sanlee-ys/defense-news-classifier/blob/main/evals/baseline_eval.txt).
+
+**Why this is a cluster and not a footnote.** The naive framing is "San trained a model," which is
+a checkbox. The transferable skill is narrower and more useful: *fit the classical model you are
+not going to ship, in order to price the one you are.* That is the map's own meta-skill running in
+reverse — the other five clusters are classical skills mutated by probabilistic outputs, and this
+one is the classical skill kept intact deliberately, as the ruler. It also carries the per-track
+split the map requires: engineering fits it and tests it properly (paired McNemar, not a delta
+squinted at), program gets a number for build-vs-buy before funding the expensive option, and
+product gets to ask whether the cheap thing is simply the product.
+
+**The honest maturity marker is `✅ measured once`, not `✅ practice`.** One bake-off on one task is
+an artifact, not a habit, and the experiment carried two disclosed handicaps that both cut against
+the baseline: judge-generated training labels tested against human ones, and an `industry` class
+with a single training row, structurally unlearnable. A margin that size survives them; they are
+stated anyway, and both are on the public writeup rather than only in the repo.
+
+**Also folded in: the autonomy ladder finished, and it belongs to the Agents & orchestration
+cluster.** That row previously cited only `kb-agent`'s tool-use loop. The classifier now carries
+L1–L4 built and measured end to end
+([`ADR-018`](https://github.com/sanlee-ys/defense-news-classifier/blob/main/decisions/018-agent-driven-ml-loop.md),
+[`ADR-020`](https://github.com/sanlee-ys/defense-news-classifier/blob/main/decisions/020-l4-multi-agent-pipeline.md),
+shipped under `v3.1.0`), including the thing that actually distinguishes multi-agent work from a
+pipeline with extra steps: a critic that hands a label *backward* for reclassification.
+
+The result reads like a failure and is not one. Three of the four measurements came back negative —
+an agent loop that improved the split it could see while degrading the held-out one, exemplar
+retrieval that did nothing, and a multi-agent pipeline that produced this system's first
+statistically significant *harm* at four times the cost. Every escalation the ladder offered was
+declined with data, and the production path is still one well-prompted call. For the **Evals**
+keystone that is the strongest available evidence: the held-out set vetoed the loop's own best
+iteration, which is the Goodhart failure demonstrated rather than described.
+
+**Sequencing note.** This addendum does not add a learning-sequence item. The sequence below lists
+what to learn *next*; baselining was a gap in the *map*, not in the plan, and it was closed by the
+work that revealed it. The remaining sequence is unchanged.
