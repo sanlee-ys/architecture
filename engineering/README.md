@@ -89,6 +89,24 @@ The house style every repo inherits — the conventions that make separate repos
   than an MCP server* — is a real decision with a costed alternative and is **not** settled
   here.
 
+  **AXI also ships tools, and taking one is a separate decision from taking the principles.**
+  Above is design guidance for CLIs *we write*. The project additionally publishes reference
+  implementations for CLIs we *use* — [`gh-axi`](https://github.com/kunchenguid/gh-axi)
+  (wraps the official `gh`), [`quota-axi`](https://github.com/kunchenguid/quota-axi),
+  `chrome-devtools-axi`, `lavish-axi` — plus an installable Agent Skill for scaffolding new
+  ones, and 48+ community implementations. **The principles are guidance and cost nothing;
+  a tool is a dependency and gets audited before it lands.** The community list is a
+  directory, not an endorsement, and anything that touches credentials gets the full
+  treatment or it does not get installed.
+
+  **Measured, so the win is not misread as smaller output.** On a two-row `pr list`,
+  `gh-axi` emits **376 characters against plain `gh`'s 250** — *bigger*, because the schema
+  header and next-step hints are fixed overhead. The benchmark's win is **turns, not bytes**
+  (3 versus 6–8): `gh-axi pr view` returns `checks: "2 passed, 2 failed, 4 total"` inline,
+  where plain `gh pr view` carries no check status and needs a second `gh pr checks` call.
+  Those hint lines cost tokens *here* to save a round-trip *there*. On short one-shot
+  commands that trade loses; across a multi-step agent task it wins.
+
   **The evidence, stated honestly.** AXI's author published a 425-run benchmark (17 tasks × 5
   reps × 5 conditions) in which an AXI-shaped `gh` beat raw `gh` and three GitHub-MCP variants
   on success, cost, latency and turns. Reconstructing Wilson intervals from the published
