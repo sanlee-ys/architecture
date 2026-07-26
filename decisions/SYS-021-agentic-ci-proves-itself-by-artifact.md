@@ -196,3 +196,36 @@ deliberately go red — `portfolio`'s classify step reddens when a tool denial *
 | **Ban agentic CI lanes; keep CI deterministic** | Overcorrects from three fixable configuration errors. The lane demonstrably produced a substantive, repo-specific review once configured. The property worth protecting is that *deterministic gates stay deterministic*, which requirement 3 secures directly. |
 | **Make the review lane a gate so muteness would be conspicuous** | Inverts the risk: a non-deterministic reviewer with merge authority turns every model error into a blocked merge, and trains the habit of merging past red. It also would not have caught break 2 — a muted run exits 0, so it would have gated on nothing while appearing to gate. |
 | **Rely on noticing that no comments ever appear** | This is what "unverified" means, stated as a plan. It is exactly how break 2 would have been found: eventually, by accident, after an unknown number of PRs went unreviewed while appearing reviewed. |
+
+## Instance note (2026-07-26) — all three lanes are now on-demand, and req. 4 lost a half
+
+All three adopting repos (`defense-news-classifier` ADR-016, `kb-agent` ADR-008, `portfolio`
+ADR-005) dropped the automatic `pull_request: [opened]` trigger on 2026-07-26. Each lane now
+fires only on an owner `@claude` comment. The driver was recurring API spend, and the reasoning
+is written up once in the classifier's ADR-016 Amendment 1.
+
+**No requirement changes.** This note exists because requirement 4 now reads against a surface
+that no longer has both halves, and a reader checking conformance should know that is deliberate
+rather than a lane having quietly stopped guarding something.
+
+- **Req. 1 (grant tools explicitly)** — unchanged, and unaffected by trigger choice.
+- **Req. 2 (verify at adoption with a live artifact)** — unchanged, and *strengthened* in
+  passing: `kb-agent`'s verifying artifact (PR #59) was already an `@claude` run, so the
+  verification exercised exactly the path that is now the only path.
+- **Req. 3 (advisory enforced at the step)** — unchanged.
+- **Req. 4 (guard the trigger surface)** — satisfied, on a **smaller surface**. The
+  fail-closed event (`pull_request` from a fork) is gone from all three lanes, along with the
+  fork skips that handled it. What remains is the fail-open half, guarded by
+  `author_association == 'OWNER'` exactly as this requirement prescribes.
+
+**The part worth internalising:** requirement 4 is written as "the defaults are asymmetric, so
+guard the open one." When the closed one is removed, the asymmetry stops being a *design
+consideration* and becomes a *single point of failure* — the OWNER gate goes from one control
+among several to the only thing between a stranger's comment and the repo owner's API key. That
+is not a weaker posture than before (the removed guards protected an event that no longer
+arrives), but it does concentrate the remaining risk, and a future change that loosens
+`author_association` now has nothing behind it. Recorded so that change is made deliberately.
+
+Each lane's own ADR records what its removed guards protected, in the workflow rather than only
+in the record, so that a later diff can distinguish "a security guard was deleted" from "the
+event it guarded no longer exists."
