@@ -11,17 +11,19 @@ The technical-craft companion to the [product one-pager](../product/one-pager.md
 third parallel lane. So this view captures the AI-era craft the system exercises, the standards that
 make the repos cohere, and where the depth actually lives.
 
-## The skill substrate — five clusters
+## The skill substrate — six clusters
 
-The competency map from `SYS-007`. The meta-skill beneath all five: **every classical engineering
-skill has an AI-era mutation, because outputs are probabilistic** — testing → evals, monitoring →
-drift detection, integration test → eval gate.
+The competency map from `SYS-007`. The meta-skill beneath the first five: **every classical
+engineering skill has an AI-era mutation, because outputs are probabilistic** — testing → evals,
+monitoring → drift detection, integration test → eval gate. The sixth runs that idea in reverse:
+keep the classical skill intact on purpose, and use it as the ruler.
 
 | Cluster | What it means here | Where it lives | Maturity |
 |---|---|---|---|
 | **Evals & quality bars** *(keystone)* | golden sets, LLM-as-judge, regression gate in CI | classifier eval harness + gold set + validated judge, gating PRs (`classifier/ADR-007`); system-wide pattern proposed in `SYS-017` | ✅ shipped in the classifier, 🔄 extending to `kb-agent` |
 | **Context engineering** | retrieval, chunk/result caps, grounding | `kb-agent` RAG; `SYS-003` rule 4 | ✅ in use (unnamed) |
-| **Agents & orchestration** | tool design, the tool-use loop, error recovery | `kb-agent` loop; `SYS-003` tool-layer contract | ✅ shipped |
+| **Agents & orchestration** | tool design, the tool-use loop, error recovery, handoff between agents | `kb-agent` loop; `SYS-003` tool-layer contract; the classifier's autonomy ladder L1–L4, including a critic that hands a label *backward* for reclassification (`classifier/ADR-018`, `ADR-020`) | ✅ shipped; both top rungs measured negative and declined |
+| **Baselines & build-vs-buy** | fit the classical model you are *not* going to ship, to price the one you are; paired significance tests instead of eyeballed deltas | classifier bake-off — TF-IDF + logistic regression trained and scored against the same human gold set as the LLM (`classifier/ADR-017`) | ✅ measured once, not yet a practice |
 | **Observability, cost & reliability** | tracing, token/latency/drift, model-tier | OTel tracing across `kb-agent`, classifier `/classify`, `notes-api` (opt-in); `SYS-002` | ✅ tracing shipped |
 | **Security, safety & governance** | prompt injection, tool-exfil surface, output hardening | threat model of the `kb-agent` tool seam as a regulated deploy (`SYS-016`); `SYS-010` posture | 📝 threat model documented |
 
@@ -118,7 +120,7 @@ For going deeper (and for downtime reading) — the real artifacts, by repo:
 
 | Repo | Read it for |
 |---|---|
-| [`defense-news-classifier`](https://github.com/sanlee-ys/defense-news-classifier) | the eval harness, the synthetic-data / circular-eval trap, the `/classify` service; ADRs 001–004 |
+| [`defense-news-classifier`](https://github.com/sanlee-ys/defense-news-classifier) | the eval harness, the synthetic-data / circular-eval trap, the `/classify` service, the classical baseline the LLM was priced against, and the autonomy ladder L1–L4 with the measured declines at its top two rungs; ADRs 001–020 |
 | [`kb-agent`](https://github.com/sanlee-ys/kb-agent) | the manual tool-use loop, RAG retrieval, the observation-shape refactor |
 | [`notes-api`](https://github.com/sanlee-ys/notes-api) | Python/FastAPI REST API; SQLAlchemy 2.0 ORM; async tag enrichment via BackgroundTasks (CLASSIFIER_URL seam); `ADR-001`–`002` |
 | [`architecture`](..) | the system decisions (`SYS-001`–`010`), the program view, the product one-pager, the case study |
