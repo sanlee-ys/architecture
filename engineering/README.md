@@ -64,6 +64,40 @@ The house style every repo inherits — the conventions that make separate repos
   that **enforcement is the wrong axis to sort a decision log by** — a lint rule that fails
   builds in three repos is still a lint rule.
 
+- **Agent-facing CLIs are designed against a token budget** — first-party CLIs an agent is
+  expected to drive (the classifier's eval harness, `netops-lab` provisioning, `career`'s
+  dashboard commands, anything new) treat context cost as a design constraint, not an
+  afterthought. Adopted from [AXI](https://github.com/kunchenguid/axi) (MIT), 2026-07-26, as
+  **design guidance — not a dependency.** Ten rules in three groups:
+
+  | | |
+  |---|---|
+  | **Efficiency** | Token-efficient output · minimal default schemas (3–4 fields per list item, more on request) · truncate long fields with a size hint and a `--full` escape hatch |
+  | **Robustness** | Pre-computed aggregates so the agent needs no follow-up call · definitive empty states (say "0 results", never print nothing) · structured errors and clean exit codes, idempotent mutations, **never prompt interactively** |
+  | **Discoverability** | Ambient context before the agent acts · content-first (bare invocation prints data, not help) · contextual disclosure (suggest the next command *after* output) · concise per-subcommand `--help` as the fallback |
+
+  **"Never prompt interactively" is the one with existing teeth here** — it is the same
+  property the house command shapes already require, and a CLI that blocks on a prompt is
+  indistinguishable from a hung agent.
+
+  *Recorded as a convention, not a `SYS` number.* It crosses repos, so it clears prong 1 of
+  [`SYS-001`](../decisions/SYS-001-record-architecture-decisions.md)'s promotion bar, but the
+  alternative to "design against a token budget" is "don't" — the null option, not a costly
+  road not chosen. It fails prong 2, exactly as
+  [`SYS-014`](../decisions/SYS-014-python-docstring-standard.md) did. The genuinely
+  foreclosing question next door — *whether agent-facing tooling should be a CLI at all rather
+  than an MCP server* — is a real decision with a costed alternative and is **not** settled
+  here.
+
+  **The evidence, stated honestly.** AXI's author published a 425-run benchmark (17 tasks × 5
+  reps × 5 conditions) in which an AXI-shaped `gh` beat raw `gh` and three GitHub-MCP variants
+  on success, cost, latency and turns. Reconstructing Wilson intervals from the published
+  rates, **the AXI-versus-everything gap survives** (Newcombe intervals all exclude zero,
+  +6.8pp to +27.1pp). Two caveats worth carrying: the study's agent and its judge are the same
+  model with no reported agreement against human labels, and every *non*-AXI comparison in it
+  overlaps zero — including CLI versus MCP on reliability, where only the ~3× cost difference
+  is real.
+
 - **Published figures are asserted, never retyped** *(the convention half of
   [`SYS-019`](../decisions/SYS-019-assert-claims-dont-list-them.md), which is the rule)* — any
   eval number or version claim quoted outside the repo
