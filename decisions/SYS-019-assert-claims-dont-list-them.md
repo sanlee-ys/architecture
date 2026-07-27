@@ -90,6 +90,10 @@ observation. There is no third state where it is "kept in sync."
   **not** backfilled. Backfilling would produce lists, and this decision's whole point is
   that lists are the weaker instrument. They tighten as new ADRs land.
 - **`README.md`** decision-log table — row added.
+- **The GitHub profile README (`sanlee-ys/sanlee-ys`)** — added to
+  `scripts/check_program_metrics.py` as a *remote* scanned surface on 2026-07-26, after it
+  was found advertising the classifier at `v3.0.0` a day after `v3.1.0` shipped. See the
+  amendment below for why it extends the existing checker rather than growing its own.
 
 ## Consequences
 
@@ -114,3 +118,56 @@ observation. There is no third state where it is "kept in sync."
 | **A scheduled cross-repo drift sweep (weekly job)** | Detects drift late rather than preventing it, and the failing surface is a report nobody owns. Useful as a backstop for un-artifacted claims; not a substitute for a build that goes red. |
 | **One shared checker package vendored into every repo** | A guard that falls out of sync reports green from stale logic — false coverage, the exact failure mode this ADR exists to remove. Revisit at five instances. |
 | **Do nothing; treat 2026-07-19 as an unusually bad day** | Six claims, three repos, two premature "sweep complete" calls, and one guard (`portfolio`) that was green throughout because its scope was narrower than its claim surface. That is a systemic property, not a bad day. |
+
+---
+
+## Amendment, 2026-07-26: remote surfaces, and the fifth-checker clause
+
+**The trigger.** The GitHub profile README was found still saying the classifier was at
+`v3.0.0`, a day after `v3.1.0` was tagged and released. The eval numbers happened to be
+unchanged, so only the label was stale — and nothing mechanical would have caught it. It
+was found by a person reading the page.
+
+**The fifth-checker clause fired, and the answer was not a shared package.** "Revisit
+when: a fifth checker appears" above anticipated that a fifth instance flips the
+duplication argument. A checker in the profile repo would have been that fifth instance.
+It was declined, but so was the shared package, and the reason is that this surface did
+not actually need a new checker: `check_program_metrics.py` already fetched a remote
+artifact over HTTPS: teaching it to fetch a remote *surface* as well is one more input to
+an existing, exercised code path, not a second copy of the logic.
+
+So the revisit clause stands, unspent. It should fire on the next genuinely new checker —
+one that needs different scanning logic, not one that needs the same logic pointed
+somewhere else.
+
+**Two costs, recorded because both are real.**
+
+1. **Detection, not prevention.** Editing the profile README does not run this build. A
+   bad edit merges green over there and reddens `architecture` afterward, at most a week
+   later via the scheduled backstop. That inverts the usual property — the failing build
+   is not in the repo that broke it — and the workflow comment says so, because someone
+   will eventually see this red and go looking in the wrong repo.
+2. **Half that surface is not covered and cannot be.** The same page quotes kb-agent
+   (recall@5 0.926, MRR 0.781) and faithfulness-judge (κ 0.751 / 0.716). Neither repo
+   publishes a machine-readable artifact — kb-agent's figures live in its README prose,
+   the judge's in `evals/results.md` — so there is nothing to assert against, and they are
+   ratcheted as an allowance instead. Worth stating flatly: **this guard would not have
+   caught the one real numeric correction in that file's history**, the judge's κ figures
+   in `sanlee-ys#28`. It covers the version label and the classifier's three accuracies.
+   The rest stays tier 3.
+
+   The honest reading is that tier 2 is not available to a claim just because someone wants
+   it to be. It is available when the producing repo has done the work of publishing an
+   artifact. Two of the four projects on that page have not, and the guard reports its own
+   scope rather than implying otherwise.
+
+**One property the original three did not state.** Liveness must be asserted **per
+surface and per marker type**, not globally. The first draft of the remote check asserted
+only that a fetched surface carried *some* marker; a test that backticked the remote
+version marker passed clean, because three healthy metric markers kept that surface's
+count nonzero and this repo's own local version markers kept the global version check
+satisfied. The stripped claim was invisible from both directions. This is the same failure
+the third bullet above already describes — "zero of a given marker *type*" — but it
+recurs once surfaces are added, because a global count silently aggregates across them.
+Stated generally: **an aggregate liveness count is only as strong as its narrowest
+partition.**
