@@ -1,0 +1,7 @@
+# Test-only dependencies. Kept OUT of requirements.txt so the portal build's install
+# stays exactly what the portal needs — that file is what `portal.yml` installs, and
+# widening it would mean a pytest release could break a docs deploy.
+#
+# Pinned for the same reason as mkdocs-material: reproducible CI, bumped by a Dependabot
+# PR rather than by hand. See .github/dependabot.yml.
+pytest==9.1.1

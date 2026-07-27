@@ -27,6 +27,28 @@ jobs:
         with:
           python-version: "3.11"
 
+      # Failure-path tests for the two guard scripts. Both steps below run their script
+      # against this repo's real content, where it is expected to pass — which exercises
+      # the happy path and leaves every drift-detection branch unexecuted. A guard could
+      # stop guarding and this job would stay green, which is the exact failure both
+      # scripts are written to prevent, one level up.
+      #
+      # Not hypothetical: PR #78's first draft asserted remote liveness as "did this
+      # surface carry ANY marker", and a backticked version marker passed clean because
+      # healthy neighbours kept every aggregate count nonzero. It was caught by throwaway
+      # scripts. These tests are those scripts, kept.
+      #
+      # Hermetic by construction — `fetch_artifact` and `fetch_text` are stubbed — so this
+      # step is fast and cannot be reddened by GitHub being down.
+      - name: Install test dependencies
+        run: python -m pip install -r requirements-dev.txt
+
+      - name: Test the guard scripts
+        # `-p no:cacheprovider`: the decision-log lint in the next step sweeps every
+        # first-party text file in the repo, and a `.pytest_cache/` left behind here would
+        # be walked as if this repo owned it.
+        run: python -m pytest tests/ -q -p no:cacheprovider
+
       # The drift classes this catches were previously found by a manual audit
       # that cost 35 agents and 2.8M tokens: a doc with no row in the log table,
       # a table status contradicting the document's own header for three weeks,
