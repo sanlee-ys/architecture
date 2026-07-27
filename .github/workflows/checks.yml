@@ -3,6 +3,17 @@ name: Checks
 on:
   push:
   pull_request:
+  # The metrics check now asserts a surface in ANOTHER repo (the GitHub profile README).
+  # Nothing about editing that file triggers this workflow, so on push/PR alone the drift
+  # would sit undetected until someone happened to commit here - which could be weeks, and
+  # the whole point is not to depend on someone happening to do something.
+  #
+  # SYS-019 rejects a scheduled sweep as a SUBSTITUTE for a build that goes red, and this
+  # is not one: local surfaces are still gated per-commit. This is the backstop that ADR
+  # explicitly allows for claims a commit hook cannot reach.
+  schedule:
+    - cron: "0 13 * * 1"  # Mondays 13:00 UTC
+  workflow_dispatch:
 
 jobs:
   decision-log:
@@ -32,5 +43,12 @@ jobs:
       #
       # Fetches the producer's published artifact, so it warns-and-passes on a network
       # failure rather than reddening an unrelated build.
+      #
+      # As of 2026-07-26 it also fetches and asserts the GitHub profile README, which was
+      # found advertising the classifier at v3.0.0 a day after v3.1.0 shipped. That repo
+      # has no workflow of its own by deliberate choice - see REMOTE_SCANNED in the script
+      # for why a fifth checker was declined - so a failure here can mean a file in
+      # sanlee-ys/sanlee-ys needs the fix, not a file in this repo. The error names the
+      # surface.
       - name: Check prose metrics against the classifier artifact
         run: python scripts/check_program_metrics.py
