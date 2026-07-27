@@ -10,6 +10,11 @@ site/
 
 graphify-out/
 
-# Bytecode from scripts/ (lint_decision_log.py, build_portal.py run locally).
+# Bytecode from scripts/ and tests/ (run locally).
 __pycache__/
 *.pyc
+
+# pytest's run cache. Never committed; also excluded from the CI run itself
+# (`-p no:cacheprovider` in checks.yml) so the decision-log lint's whole-repo sweep in
+# the following step does not walk a tool cache it does not own.
+.pytest_cache/
