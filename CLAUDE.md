@@ -16,7 +16,6 @@ instructions. Hand-edits under `portal/` are overwritten on the next build, sile
 Edit the real source in the owning repo — or `portal_src/` for portal-only chrome —
 then re-run the script.
 
-<!-- shared:links-verify v1 -->
 ## The guard scripts have tests — run them when you touch one
 
 `scripts/check_program_metrics.py` and `scripts/lint_decision_log.py` are also *run* by CI
@@ -33,6 +32,7 @@ what a guard detects, change its test in the same commit and say why in the docs
 you add a check without a failure-path test, the guard can stop guarding and CI stays
 green — which is the failure both scripts exist to prevent, one level up.
 
+<!-- shared:links-verify v1 -->
 ## Links — verify before sending (hard rule)
 
 Links given in chat must resolve: **full `github.com/<owner>/<repo>/blob/<ref>/<path>` URLs only**, **verify the path exists on the ref before sending** (unverified → say so), and **branch links are perishable** (prefer `main` once merged). Full rule + rationale: [claude-ops `conventions/links-verify.md`](https://github.com/sanlee-ys/claude-ops/blob/main/conventions/links-verify.md).
