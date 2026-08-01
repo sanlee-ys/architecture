@@ -36,12 +36,20 @@ it with the identical logic. Added 2026-07-26 for the GitHub profile README
 (`sanlee-ys/sanlee-ys`), which was found advertising the classifier at v3.0.0 the day
 after v3.1.0 shipped — caught by a person reading it.
 
-That repo could have grown its own checker instead. It was declined on two grounds: it
-would have been that repo's FIRST workflow (dragging in a Dependabot block and a Python
-toolchain for one script in a six-file repo), and it would have been `SYS-019`'s FIFTH
-checker — the exact count that ADR names as its own revisit trigger, where "the
-duplication argument flips" toward a shared package. Reaching one more surface from the
-checker that already exists is the smaller move.
+That surface was REMOVED on 2026-07-31: the profile README was redesigned to carry no
+performance claims at all (it is now an identity paragraph plus a pointer graphic to
+sanlee.me; the numbers live in the pinned repos' own descriptions and on the portfolio,
+each guarded in its own repo). A surface with nothing to assert has nothing to drift.
+The registry is empty as of that change, but the mechanism, its failure policy, and its
+tests are kept deliberately: the next outward surface that quotes a metric opts in by
+adding one entry here, not by rebuilding this.
+
+The reasoning that put the fetch HERE rather than growing a checker in that repo still
+holds for any future entry: a one-workflow repo would drag in a Dependabot block and a
+Python toolchain for one script, and a fifth SYS-019 checker is the exact count that ADR
+names as its own revisit trigger, where "the duplication argument flips" toward a shared
+package. Reaching one more surface from the checker that already exists is the smaller
+move.
 
 The accepted cost is that this is **detection, not prevention**: a bad edit to a remote
 surface merges green in its own repo and reddens *this* build afterward. Remote surfaces
@@ -125,13 +133,11 @@ SCANNED = (
 # Exact rather than minimum, deliberately: if a blurb gains or loses a marked claim, this
 # inventory must be updated in the same change, so the file stays an accurate statement of
 # what is actually guarded over there rather than drifting into an optimistic guess.
-REMOTE_SCANNED = {
-    "sanlee-ys/sanlee-ys:README.md": {
-        "url": "https://raw.githubusercontent.com/sanlee-ys/sanlee-ys/main/README.md",
-        # 1 classifier version + category/domain/region accuracy.
-        "expect": {"version": 1, "metric": 3},
-    },
-}
+# Empty since 2026-07-31: the only entry (the GitHub profile README, added 2026-07-26)
+# was retired when that page was redesigned to carry no performance claims. The tests
+# stub this dict, so the machinery stays exercised while the registry is empty. See the
+# module docstring for the full history and for what a future entry must look like.
+REMOTE_SCANNED: dict[str, dict] = {}
 
 # Metric-shaped numbers that are NOT behind a marker, per file. Every one of these is a
 # historical figure (a v1 synthetic baseline, a superseded measurement quoted as history)
@@ -153,19 +159,6 @@ UNMARKED_ALLOWED = {
     "program/README.md": 2,
     "engineering/README.md": 0,
     "README.md": 0,
-    # The profile README's kb-agent figures (recall@5 0.926, MRR 0.781) and
-    # faithfulness-judge figures (Opus kappa 0.751, Sonnet 0.716). These are real, current
-    # measurements - but NEITHER repo publishes a machine-readable artifact to assert them
-    # against: kb-agent's live in its README prose, the judge's in `evals/results.md`. So
-    # there is no artifact to mark them to, and marking them to THIS one would assert them
-    # against the wrong measurement entirely.
-    #
-    # Stated plainly, because a guard that is quiet about its own scope is how the
-    # portfolio check sat green while narrower than its claim surface (SYS-019's last
-    # alternative row): this check covers the classifier's four claims on that page and
-    # NOT these four. Half that surface remains a human sweep. If either repo publishes an
-    # artifact, mark them and drop this allowance.
-    "sanlee-ys/sanlee-ys:README.md": 4,
 }
 
 # Fenced blocks and inline code spans. Stripped before any scanning: a marker written
