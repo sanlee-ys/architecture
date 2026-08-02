@@ -1,6 +1,6 @@
 # SYS-017: Make evals-as-CI a system-wide pattern, gated on corpus provenance
 
-**Status:** Proposed
+**Status:** Accepted — adopted 2026-08-02 with the tier ladder in the adoption amendment
 **Date:** 2026-07-18
 **Deciders:** San Lee
 
@@ -147,6 +147,10 @@ or model-version drift actually make the gate flap. It is not a prerequisite for
 - **`learning-notes/glossary.md`** — already corrected in
   [learning-notes#38](https://github.com/sanlee-ys/learning-notes/pull/38). Listed because it is the
   surface that proved the citation rot reaches an agent-readable corpus.
+- **Adoption (2026-08-02) added surfaces of its own** — the status change ripples into every page
+  that described this decision as unratified. They are listed in the adoption amendment's own
+  Downstream surfaces block below rather than mixed in here, so the July sweep stays readable as
+  the July sweep.
 
 ## Consequences
 
@@ -178,3 +182,224 @@ or model-version drift actually make the gate flap. It is not a prerequisite for
 | Replicate the classifier's two-gate split in `kb-agent` for symmetry | The split exists to manage paid, non-deterministic model calls and fork-PR secret exposure. `kb-agent`'s retrieval eval is free, local, and deterministic, so a scheduled paid job would be ceremony with no referent. |
 | Fold this into `SYS-007` | `SYS-007` is the substrate and skill map; evals are one cluster on it. Three surfaces already mis-cite `SYS-007` *as* the evals decision, and merging them would ratify the confusion instead of fixing it. |
 | Write nothing; let `classifier/ADR-007` stand as the record | It is repo-local by design and says so. It cannot carry a `kb-agent` precondition, and leaving it as the only record is what produced two different wrong SYS citations. |
+
+---
+
+## Adoption amendment (2026-08-02) — the tier ladder, where the fleet actually sits, and what moves next
+
+This decision sat at `Proposed` for fifteen days. Adopting it is this amendment, and two gaps in
+the original are why it was easy to leave unratified:
+
+1. **It named a finished state, not rungs.** "Instantiate the pattern with three parts" describes
+   a repo that already has a gate. It gives a repo with none of them nothing to aim at *next*, and
+   it gives a reader no vocabulary for saying what a repo has *today* without reading its CI.
+2. **It placed two repos and inferred the rest.** The classifier was the pilot, `kb-agent` was the
+   blocked case, and nobody ever asked where `faithfulness-judge`, `notes-api` or `learning-notes`
+   stood. Two of those three turn out to have no eval at all, which is the right answer for them —
+   but that was an assumption, not a finding.
+
+So this amendment adds a **ladder** and a **table of where each repo actually stands**, both read
+off the workflow files on disk on 2026-08-02 rather than off the roadmap's description of them.
+Nothing below changes the original Decision; §1–§4 stand as written, and §3 (corpus provenance)
+becomes the ladder's entry condition rather than a `kb-agent` footnote.
+
+### The principle, in one line
+
+**A measured capability claim needs a gate that actually runs.** Everything below is that sentence
+made checkable. Four house corollaries, each earned from a specific failure rather than assumed:
+
+- **Floors come from measured runs, with run-to-run noise under them — never from aspiration.**
+  The classifier states this as a house rule in `classifier/ADR-014` ("thresholds after
+  measurement, never before"), and the sharpest instance is a *refusal*: its scaled region run
+  produced no threshold at all, because a single pass is a dated measurement and cannot supply the
+  noise band a floor sits above. `src/scale_region_eval.py` declines to propose one in code, not
+  just in prose. A floor invented before the measurement is not a bar; it is a number the eval will
+  be tuned to meet.
+- **A gate that cannot fail is theater.** Every guard in this system that survived contact has a
+  liveness clause: `eval_gate.py` refuses to grade a snapshot whose row count shrank rather than
+  scoring the smaller sample; a missing provenance sidecar is a failure and not a skip, or `rm` is
+  a one-command bypass; `check_program_metrics.py` fails on *zero* markers, because a check that
+  verifies nothing reads exactly like a check that passed. The reason this keeps needing restating
+  is that all three failure modes are **green**.
+- **The split between legs is decided by cost and determinism, not by convention.** Offline,
+  deterministic, keyless legs run on every push and pull request. Legs that spend money run only
+  on an owner-initiated event — the classifier's live lane is reachable from `workflow_dispatch`
+  and `schedule` only, which means a fork pull request has no event that can invoke it at all.
+  The corollary runs the other way too, and the original §2 already says so: a repo with nothing
+  paid to defer gets **one** leg, not a ceremonial second one.
+- **Harness health is a separate output from the finding.** A clean lift computed over a run that
+  dropped a third of its rows is not a finding. The reusable shape already exists in-house
+  (`paired_compare.py`, vendored into more than one repo): scored / errored / unscored / unscorable
+  counted separately, zero-count reasons emitted so that a clean run and an unexamined one do not
+  render identically, and metrics computed only over rows where every arm scored — never imputed,
+  never counted as a miss. And it must be **enforced, not printed**: the classifier's A/B harness
+  had this rule as decision criterion #4, printed it, did not assert it, and produced a well-formed
+  report over an interrupted arm.
+
+### The ladder
+
+Four rungs. Each is a strict superset of the one below, and each is defined by a mechanism a
+reader can point at in a file — not by intent.
+
+| Tier | The repo has | How you tell from outside |
+|---|---|---|
+| **0 — Measured, not gated** | A runnable eval harness, and possibly a committed result. CI runs tests and lint. | No workflow step invokes the harness. The published number is a dated report. |
+| **1 — The eval runs in CI on every PR** | The harness executes on `push`/`pull_request`, offline and keyless, and reports. Merge is not blocked by the value. | A workflow step invokes the harness. **Entry condition: corpus provenance** (§3) — CI reconstructs every input from version-controlled sources. |
+| **2 — Measured floors gate the merge** | A gate script grades a committed baseline against a floors file and exits non-zero on breach; floors are measured with noise under them; the gate refuses to grade a partial snapshot; CI never writes the baseline back. | A floors file exists, and the gate is a **required status check** in branch protection. |
+| **3 — The publish chain is provenance-pinned** | The graded snapshot carries a fingerprint of what produced it, and both the gate and the publisher refuse to act on a divergent one. Outward claims are generated or asserted from the published artifact. | A provenance sidecar exists and is read by two independent consumers. `SYS-019` tier 1 or 2 covers every outward number. |
+
+Three notes the rungs do not carry on their own:
+
+- **Tier 0 has a deceptive half-step.** `kb-agent` asserts its gold set's size and kind composition
+  in `pytest` while never running retrieval — *set integrity gated, set execution not*. That is a
+  genuinely useful check and it is worth having; it is also the kind of thing that reads as
+  coverage in a checks list. It does not reach tier 1, because nothing measures quality.
+- **Tier 2 is half a branch-protection setting.** A workflow cannot declare itself required. The
+  classifier's own ADR-007 says this plainly, and a repo can sit at "tier 2 mechanism, tier 1
+  effect" indefinitely without any file being wrong. When placing a repo, check the setting, not
+  the workflow.
+- **Tier 3 is not the goal for every repo.** It is the rung for repos that publish a number
+  *outward*, which is the same population `SYS-020` uses to decide which repos earn tags. A repo
+  whose numbers never leave it is finished at tier 2.
+
+### Where the fleet actually sits (2026-08-02)
+
+Read off the files, with citations. This table is a dated observation, not a guarantee — per
+`SYS-019` it is tier 3 (a list), and it goes stale the ordinary way.
+
+| Repo | Tier | Evidence | What is *not* gated |
+|---|---|---|---|
+| **defense-news-classifier** | **3** | Offline gate on push/PR runs `src/eval_gate.py` against floors in `evals/thresholds.toml`; partial-snapshot refusal in `_check_sample_size()`; provenance sidecar written by the producer and read by *both* `src/eval_gate.py` and `scripts/gen_metrics_artifact.py`; live lane restricted to `workflow_dispatch`/`schedule`; `evals/metrics.json` published and asserted by three downstream repos. | The required-status-check half of tier 2 is a branch-protection setting the workflow cannot declare. ADR-007 also volunteers that shared loose floors make the per-PR leg a **weak drift detector** — it trips on a large regression or a broken scorer, not on small real drift. |
+| **kb-agent** | **0** *(gold-set integrity gated; execution not)* | `ci.yml` runs ruff, two cross-repo contract checks, the ADR lint and `pytest`. `tests/test_eval_retrieval.py` asserts the gold set's size and kind composition. `scripts/eval_retrieval.py` appears in no workflow. | Retrieval quality entirely. Blocked at tier 1 by §3, still: `projects.yaml`'s `notes_dirs` is an absolute Windows path, `scripts/index.py` reads it with no env override, and a missing notes directory is **skipped with a warning rather than erroring** — so a naive gate would score the notes-kind queries as misses while the job stayed green. The precondition this decision named in July is unchanged in August. |
+| **faithfulness-judge** | **0** | `tests.yml` is `ruff` + `pytest`, deliberately keyless. The agreement statistics are computed by `src/score.py`, which is offline and reads committed label files, and writes `evals/results.md`. Nothing in CI runs it. | The eval itself, and also the *claims*: `README.md` and `CLAUDE.md` restate figures from `evals/results.md` under a written human rule to reconcile them by hand. That is `SYS-019` tier 3 for a number the repo already computes deterministically. |
+| **notes-api** | **n/a — no eval** | Gates contracts, not measurements: `scripts/gen_contract_schema.py --check` regenerates the provider-owned schema and fails if stale; `scripts/check_classify_contract.py` asserts the consumer half. | Nothing. This is the correct instrument for what this repo publishes; see the rollout note below. |
+| **learning-notes** | **n/a — no eval** | Carries the closest adjacent mechanism in the system: `scripts/check_published_metrics.py` runs as its own CI job and asserts *another repo's* numbers as quoted here, failing on mismatch, on an unknown key, **and on zero markers**. Plus a generated-file drift job. | Nothing. |
+| **architecture** *(this repo)* | **n/a — no eval** | Same adjacent shape one repo over: `scripts/check_program_metrics.py`, plus `scripts/lint_decision_log.py`, both with failure-path tests because running a guard against content it passes only exercises its happy path. | Nothing. |
+
+The honest summary of that table: **one repo of six gates an eval, and the two repos that hold an
+unwired harness are blocked for entirely different reasons** — `kb-agent` by corpus
+reconstructibility, `faithfulness-judge` by nothing at all.
+
+### Rollout — who should move, and what it costs
+
+Adopting this decision does not move anything. These are the work items adoption makes
+*chippable*; each is its own repo-local ADR, per the original's `kb-agent` note.
+
+**`kb-agent`: 0 → 1, then 1 → 2.** The obvious candidate, because `scripts/eval_retrieval.py`
+needs no API key and embeds locally — it is free and deterministic, so gating it costs runner
+minutes and nothing else. The ordering is the original §3's, unchanged, and the cost is almost
+entirely in the first step:
+
+1. Make the notes corpus reconstructible — an env override read by `scripts/index.py`, or a
+   CI-written `projects.yaml`. This is the real work.
+2. Shallow-clone `learning-notes` in the job and point the index at it. Precedent is in this
+   repo: `.github/workflows/portal.yml` already clones sibling repos, and `learning-notes` is
+   public, so no token is involved.
+3. Build the index in the job. The model and Chroma caches `ci.yml` already keeps for the
+   integration test cover the download cost.
+4. Run the harness with `--json` and commit the result as the baseline. **This is the measurement
+   that tier 2 needs and does not yet exist.**
+5. Only then: a gate script and a floors file.
+
+**What floor values would the gate use? None that can be named today, and that is the finding.**
+The retrieval figures `kb-agent` currently quotes in its README prose were measured on the
+workstation, against a corpus assembled from an absolute local path that CI cannot reconstruct. A
+number measured in one environment is not a floor in another — promoting it would be exactly the
+"floor set low enough to accommodate the absence" this decision's Context warns about, wearing a
+measured number's clothes. The closest existing recorded runs are the two arms of `kb-agent`'s
+hybrid-versus-dense A/B (`kb-agent/ADR-010`), and they were measured in that same
+un-reconstructible environment, so they are not eligible either. The runs that *would* be eligible
+are the ones step 4 produces in CI — **plural**, because ADR-014's rule requires run-to-run noise
+under the floor and one pass cannot supply it. Reconstruct → measure in CI, more than once →
+set floors → gate.
+
+**`faithfulness-judge`: 0 → 1, cheaply; 2 is a separate question.** `src/score.py` is offline and
+deterministic over committed label files, so recomputing agreement in CI costs one workflow step
+and no money — there is no corpus-provenance blocker here at all, which makes it the cheapest
+tier-1 move in the fleet. Tier 2 should **not** be assumed to follow: an agreement statistic
+measured once has no noise band under it, so the same refusal the classifier applied to its scale
+run applies here, and a floor would have to wait on a repeat measurement. There is also a
+worthwhile move that is not on this ladder: the README's restated figures could be asserted
+against `evals/results.md` (`SYS-019` tier 1 or 2) today, which fixes a claim-drift risk without
+touching CI's eval posture at all.
+
+**`kb-agent`'s kind-usage eval is explicitly not part of this.** `scripts/eval_kind_usage.py`
+spends one model call per gold query per run. Under the third corollary it belongs on an
+owner-triggered lane or nowhere — never on a pull-request leg — and this decision recommends
+nowhere for now.
+
+**`notes-api` and `learning-notes` should not move.** Neither has an eval, and neither should
+acquire one to satisfy a ladder. What they publish is contracts and quoted numbers, and both are
+already gated by the right instrument (`SYS-018`, `SYS-019`). Inventing a measurement so a repo
+can have a tier is the same error as an aspirational floor, one level up.
+
+### Non-goals
+
+- **Not a mandate to add API-spending CI legs.** The default for a paid eval is owner-triggered or
+  absent. Nothing here authorises a scheduled spend in a second repo.
+- **Not a framework, and not a shared gate package.** Each repo's gate stays its own script, for
+  the reason `SYS-019` gives: a vendored guard that falls out of sync reports green from stale
+  logic, which is worse than duplicating it. `SYS-019`'s fifth-checker revisit clause governs when
+  that flips; this decision does not spend it.
+- **Not a deadline.** Repos are placed on the ladder honestly, not required to climb by a date.
+  Tier 0 is a legitimate resting place for a repo whose numbers do not leave it.
+- **Does not supersede `SYS-019`; the two are orthogonal and both are needed.** `SYS-019` governs
+  what may be *claimed* about a measurement; this governs whether the measurement is *enforced*. A
+  number can be perfectly asserted against a published artifact and still be a report nobody
+  re-checks — that is precisely the classifier's position before ADR-007, and precisely
+  `faithfulness-judge`'s position now in reverse. Likewise `SYS-003` sets the eval-acceptance
+  expectation for agent-callable tools; this says what "enforced" has to mean mechanically.
+- **Does not authorise promoting an agentic lane to a gate.** `SYS-021` reserves that, and its
+  reasoning stands: a silently-muted *gate* is a hole in the build. Every tier here is
+  deterministic by construction.
+
+### The successor is sequenced, and has not begun
+
+The next item after this one is the **prompt-optimization loop** — the roadmap's standing
+"next-after". It is **not started**, and the ordering is a constraint rather than a preference:
+the loop's premise is that a prompt change can be scored automatically and accepted or rejected on
+the result, which requires the repo it runs in to be at tier 2 or 3 already. Adopting this first
+is what makes the loop's verdicts mean anything. One standard at a time.
+
+### Downstream surfaces (adoption)
+
+- **`README.md` decision-log table** — status cell moved to `Accepted`. Swept in the adopting PR;
+  the lint fails if it drifts, so this one is enforced rather than listed.
+- **`engineering/README.md`** — two lines described this decision as unratified: the keystone row
+  ("system-wide pattern proposed in `SYS-017`") and the learning-sequence item ("settling
+  `SYS-017`, which is still `Proposed`"). Both swept in the adopting PR. The keystone line's
+  maturity marker is now accurate for the first time since the classifier pilot shipped.
+- **`program/README.md` — risk R6 and the `Next` entry.** Deliberately **not edited**. Both remain
+  true after adoption: R6's remaining piece is still corpus provenance, and `Evals-as-CI for
+  kb-agent` is still `Next` — this decision ratifies a standard, it does not wire a gate. What
+  adoption gives R6 is vocabulary (it can now say `kb-agent` is at tier 0 and why), and that is a
+  reason to revise the row when it is next touched, not a correction owed today. Recorded so a
+  later reader can tell an untouched surface from an unswept one.
+- **`portal_src/telemetry.md`** — already repointed to this decision on 2026-07-18; the adoption
+  changes nothing there.
+- **`kb-agent`, `faithfulness-judge`** — the rollout rows above. Each lands as a repo-local ADR
+  citing this one, **after** adoption. Nothing in either repo is changed by this decision.
+- **`case-study/README.md`** — describes evals-as-CI in the narrative arc without a status claim,
+  so it needs no edit. Checked, not assumed.
+- **The fleet table itself** — a dated observation with a real staleness rate, by its own
+  `SYS-019` classification. It is not enforced and should not be read as current once any of the
+  six repos changes its CI.
+
+### Consequences of adopting
+
+- **Makes easier:** answering "is this repo's number enforced?" with a rung instead of an
+  argument, and scoping the next piece of work without re-deriving the ordering each time.
+- **Costs:** the ladder is a vocabulary, and vocabularies invite tier-chasing. The non-goals exist
+  to blunt that, and the two `n/a` rows are the load-bearing examples — a repo with no eval is not
+  behind.
+- **Forecloses:** wiring a gate before its corpus is reconstructible, and setting a floor from a
+  number measured somewhere the gate will not run. Both were live options for `kb-agent` and both
+  are now closed in writing.
+- **A known hole, stated plainly:** nothing mechanically asserts the fleet table. There is no
+  artifact publishing each repo's CI posture, so under `SYS-019`'s own tiers this is a list, with a
+  list's failure rate. Generating it from the six repos' workflow files is a real option and is
+  deliberately deferred — it would be the fifth checker, and `SYS-019`'s revisit clause should fire
+  on a checker that needs *different* logic, which this one would.
+- **Revisit when:** a second repo reaches tier 2, or when the prompt-optimization loop starts —
+  whichever comes first. The second event is the one that will test whether the ladder's rungs were
+  cut in the right places.
