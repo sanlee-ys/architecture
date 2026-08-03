@@ -320,6 +320,99 @@ def test_line_number_is_the_editors_line_number(configure, tmp_path):
     assert "local.md:12:" in offence
 
 
+# --- placement is swept over EVERY markdown file; the value rules are not -------------
+#
+# `SCANNED` is narrow on purpose and stays narrow: its rules ask "is this number still
+# current?", which is meaningless for `decisions/` and `adr/`, where an ADR is a dated
+# record. Placement asks "does this file render?" — true of every file — so it alone is
+# swept over the tree. The fixtures below keep the same discipline as the section above:
+# a marker sits after text unless line-initial placement is the thing under test.
+
+
+def test_the_sweep_reaches_files_scanned_does_not(configure, tmp_path):
+    configure(tmp_path=tmp_path)
+    (tmp_path / "decisions").mkdir()
+    (tmp_path / "decisions" / "SYS-999.md").write_text("dated record\n", encoding="utf-8")
+    swept = {p.relative_to(tmp_path).as_posix() for p in cpm.sweep_paths(tmp_path, cpm.SCANNED)}
+    assert "decisions/SYS-999.md" in swept
+    # ...and not what SCANNED already owns, or a bad marker would be reported twice.
+    assert "local.md" not in swept
+
+
+def test_line_initial_marker_outside_scanned_is_caught(configure, tmp_path):
+    """The gap this closes: `decisions/` could break its own page with nothing to notice."""
+    configure(tmp_path=tmp_path)
+    (tmp_path / "adr").mkdir()
+    (tmp_path / "adr" / "ADR-999.md").write_text(
+        "The classifier is at\n<!-- version:classifier -->**v3.1.0** today.\n",
+        encoding="utf-8",
+    )
+    problems = cpm.check_placement(tmp_path, cpm.sweep_paths(tmp_path, cpm.SCANNED))
+    assert any("adr/ADR-999.md:2: a marker is the first thing" in p for p in problems)
+
+
+def test_fenced_marker_outside_scanned_passes(configure, tmp_path):
+    """Same file, same column-zero marker, only the fence differs."""
+    configure(tmp_path=tmp_path)
+    (tmp_path / "adr").mkdir()
+    (tmp_path / "adr" / "ADR-999.md").write_text(
+        "Never write it like this:\n\n```markdown\n"
+        "<!-- metric:category_accuracy -->92.6%\n```\n",
+        encoding="utf-8",
+    )
+    assert cpm.check_placement(tmp_path, cpm.sweep_paths(tmp_path, cpm.SCANNED)) == []
+
+
+def test_the_sweep_applies_only_the_placement_rule(configure, tmp_path):
+    """A stale value or unknown key in an ADR is NOT a failure — that is the whole split.
+
+    If this ever starts failing, the value rules have leaked into `decisions/`, and the
+    next person to "fix" it will do so by re-syncing a dated record to today's numbers.
+    """
+    configure(tmp_path=tmp_path)
+    (tmp_path / "decisions").mkdir()
+    (tmp_path / "decisions" / "SYS-999.md").write_text(
+        "In June it measured <!-- metric:category_accuracy -->**88.9%**, "
+        "and <!-- metric:typo_key -->**79.0%** on the synthetic set.\n",
+        encoding="utf-8",
+    )
+    assert cpm.check_placement(tmp_path, cpm.sweep_paths(tmp_path, cpm.SCANNED)) == []
+
+
+def test_the_sweep_does_not_walk_generated_or_vendored_trees(configure, tmp_path):
+    """`portal/` is build output; editing a marker there fixes a copy, not a source."""
+    configure(tmp_path=tmp_path)
+    for skipped in ("portal", "site", ".claude", "node_modules", "__pycache__"):
+        (tmp_path / skipped).mkdir()
+        (tmp_path / skipped / "STRAY.md").write_text(
+            "generated\n<!-- metric:category_accuracy -->**92.6%**\n", encoding="utf-8"
+        )
+    assert cpm.sweep_paths(tmp_path, cpm.SCANNED) == []
+
+
+def test_placement_still_runs_when_the_artifact_fetch_fails(configure, tmp_path, capsys):
+    """An outage skips the value rules. It must not skip a rule that needs no artifact.
+
+    Otherwise a bad merge lands green during a GitHub blip — a gate that did not
+    actually run, which this repo counts as a failure rather than a pass.
+    """
+    configure(tmp_path=tmp_path, artifact=None)
+    (tmp_path / "adr").mkdir()
+    (tmp_path / "adr" / "ADR-999.md").write_text(
+        "The classifier is at\n<!-- version:classifier -->**v3.1.0** today.\n",
+        encoding="utf-8",
+    )
+    assert cpm.main() == 1
+    assert "first thing on this line" in capsys.readouterr().err
+
+
+def test_a_clean_tree_still_passes_when_the_artifact_fetch_fails(configure, tmp_path, capsys):
+    """The other half: an outage with no placement fault is still a loud skip, not a fail."""
+    configure(tmp_path=tmp_path, artifact=None)
+    assert cpm.main() == 0
+    assert "SKIPPED" in capsys.readouterr().out
+
+
 def test_unmarked_number_over_allowance_is_caught(configure, tmp_path):
     """The coverage ratchet: a NEW metric-shaped number nobody marked fails the build.
 

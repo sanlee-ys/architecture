@@ -129,14 +129,25 @@ The house style every repo inherits — the conventions that make separate repos
   | **Marker (Markdown)** | `category <!-- metric:KEY -->92.6%` — renders invisible |
   | **Version claims** | `<!-- version:classifier -->**v3.0.0**` — **never** in backticks: code spans are stripped before scanning, so a marker inside them matches nothing |
   | **Keys** | the artifact's `gold` object (`category_accuracy`, `domain_macro_f1`, …) |
-  | **Fails on** | value mismatch · unknown key · zero markers found · zero of a marker *type* |
-  | **Warns and passes on** | artifact fetch failure — an outage must not redden an unrelated build |
+  | **Fails on** | value mismatch · unknown key · zero markers found · zero of a marker *type* · a marker that starts a line |
+  | **Warns and passes on** | artifact fetch failure — an outage must not redden an unrelated build. Placement is still checked: it reads no artifact, and a rule that stops running during a blip is a gate that did not run |
 
   **Historical figures are deliberately unmarked.** A v1 baseline or a superseded column is a
   frozen record of a past run; marking it would make the guard rewrite history on every release.
   That is `SYS-009`'s guarantee-vs-dated-observation rule applied to numbers, and it is why
-  `decisions/` and `adr/` are outside every one of these checks: an ADR records what was true
-  when it was written.
+  `decisions/` and `adr/` are outside every check that asks **"is this number still current?"**:
+  an ADR records what was true when it was written, and re-syncing it to today's artifact would
+  be rewriting the record.
+
+  **The one rule that does reach them is placement**, and the difference is why it is split out.
+  A marker at the start of a line opens a CommonMark HTML block, which closes the paragraph
+  above it and suspends inline formatting until the next blank line — so the page renders with
+  literal `**` and backticks while the source looks fine and the checker passes clean. That is
+  true whether the figure beside it is live, historical or frozen, so placement asks **"does
+  this file render?"** and is swept over every `.md` in the repo. It can never ask anyone to
+  restate a number: the fix is always to move the marker onto the end of the previous line.
+  Markers inside code spans and fences are documentation of the convention, not uses of it,
+  and are skipped.
 
   **Where the repo owns the artifact, generate instead of check.** The classifier's own README
   table is produced by `scripts/gen_readme_metrics.py`, not verified by a checker — a generated
