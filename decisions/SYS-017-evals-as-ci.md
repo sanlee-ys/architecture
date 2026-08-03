@@ -274,18 +274,24 @@ Read off the files, with citations. This table is a dated observation, not a gua
 |---|---|---|---|
 | **defense-news-classifier** | **3** | Offline gate on push/PR runs `src/eval_gate.py` against floors in `evals/thresholds.toml`; partial-snapshot refusal in `_check_sample_size()`; provenance sidecar written by the producer and read by *both* `src/eval_gate.py` and `scripts/gen_metrics_artifact.py`; live lane restricted to `workflow_dispatch`/`schedule`; `evals/metrics.json` published and asserted by three downstream repos. | The required-status-check half of tier 2 is a branch-protection setting the workflow cannot declare. ADR-007 also volunteers that shared loose floors make the per-PR leg a **weak drift detector** — it trips on a large regression or a broken scorer, not on small real drift. |
 | **kb-agent** | **1** *(as of 2026-08-02; was 0 when this amendment was drafted the same day)* | `ci.yml` shallow-clones `learning-notes`, builds the index against the clone via `KB_AGENT_NOTES_DIRS`, and runs **both** arms of `scripts/eval_retrieval.py` — unfiltered and `--kind-filter` — as reporting steps on every push and pull request ([`kb-agent/ADR-012`](https://github.com/sanlee-ys/kb-agent/blob/main/decisions/ADR-012-reconstruct-the-notes-corpus-in-ci.md)). §3's entry condition is met: a configured-but-absent notes dir now raises `FileNotFoundError` in `scripts/index.py` rather than skipping with a warning, so a short corpus fails the job instead of quietly scoring as bad retrieval. `tests/test_eval_retrieval.py` still asserts the gold set's size and kind composition. | The value, deliberately. There is no floors file, no gate script, and no required status check — a non-zero exit on either arm means the harness broke, not that retrieval regressed. Tier 2 is unstarted and correctly so: the first CI run (unfiltered recall@1 0.741 / recall@5 0.926 / MRR 0.813; `--kind-filter` recall@1 0.963 / MRR 0.981; 269 chunks over 44 files) is **one** measurement, and ADR-014's rule wants run-to-run noise under a floor. `scripts/eval_kind_usage.py` remains out of CI by design. |
-| **faithfulness-judge** | **0** | `tests.yml` is `ruff` + `pytest`, deliberately keyless. The agreement statistics are computed by `src/score.py`, which is offline and reads committed label files, and writes `evals/results.md`. Nothing in CI runs it. | The eval itself, and also the *claims*: `README.md` and `CLAUDE.md` restate figures from `evals/results.md` under a written human rule to reconcile them by hand. That is `SYS-019` tier 3 for a number the repo already computes deterministically. |
+| **faithfulness-judge** | **1** *(as of 2026-08-02; was 0 when this amendment was drafted the same day)* | `tests.yml` now runs the agreement eval after the existing `ruff` + `pytest` suite, still offline and keyless: it deletes `evals/results.md`, regenerates it with `uv run python src/score.py`, then fails on `git diff --exit-code -- evals/results.md` with a directed message ([`faithfulness-judge/ADR-003`](https://github.com/sanlee-ys/faithfulness-judge/blob/main/decisions/003-score-in-ci.md)). §3's entry condition was never in question here — `data/claims.yaml` and `data/judgments_*.yaml` are committed, so there was nothing to reconstruct. The `rm` is the liveness clause, and it is the reason this is not the theatrical version: `score.py` is a pure function over committed files, so a step that ran it without deleting the artifact first would diff git's checkout against git's checkout and pass vacuously if `score.py` ever stopped writing it at all. | The value, deliberately. There is no floors file, no gate script, and no required status check — this fails on **staleness** (the committed artifact disagrees with what the code produces), never on a number. κ is free to move; the file just has to move with it. **Tier 2 is blocked on something CI cannot fix**: an agreement statistic measured once has no noise band under it, and running CI more often does not supply one, because CI recomputes the same deterministic function over the same committed bytes and returns the identical figure every time. A second *sample* needs a paid judge re-run, which that repo's `CLAUDE.md` forbids doing to double-check. Also still ungated: the *claims* — `README.md` and `CLAUDE.md` restate figures from `evals/results.md` by hand. That is a `SYS-019` concern, explicitly out of scope of ADR-003, and it is now the larger of the two remaining holes. |
 | **notes-api** | **n/a — no eval** | Gates contracts, not measurements: `scripts/gen_contract_schema.py --check` regenerates the provider-owned schema and fails if stale; `scripts/check_classify_contract.py` asserts the consumer half. | Nothing. This is the correct instrument for what this repo publishes; see the rollout note below. |
 | **learning-notes** | **n/a — no eval** | Carries the closest adjacent mechanism in the system: `scripts/check_published_metrics.py` runs as its own CI job and asserts *another repo's* numbers as quoted here, failing on mismatch, on an unknown key, **and on zero markers**. Plus a generated-file drift job. | Nothing. |
 | **architecture** *(this repo)* | **n/a — no eval** | Same adjacent shape one repo over: `scripts/check_program_metrics.py`, plus `scripts/lint_decision_log.py`, both with failure-path tests because running a guard against content it passes only exercises its happy path. | Nothing. |
 
-The honest summary of that table: **one repo of six gates an eval, and exactly one repo still holds
-a harness that CI never runs** — `faithfulness-judge`, blocked by nothing at all. `kb-agent` was the
-second such repo for the length of an afternoon; it was blocked by corpus reconstructibility, and
-that is now cleared. Note what the first clause does *not* say: reaching tier 1 moved `kb-agent` out
-of the unwired column without moving the gated count, which is the distinction the ladder exists to
-keep visible. A number that runs on every PR and blocks nothing is a report on a shorter timer, not
-a bar.
+The honest summary of that table: **one repo of six gates an eval, and no repo holds a harness that
+CI never runs.** The unwired column is now empty. It held two repos when this amendment was drafted
+— `kb-agent`, blocked by corpus reconstructibility, and `faithfulness-judge`, blocked by nothing at
+all — and both cleared within the same day, the first by `kb-agent/ADR-012` and the second by
+`faithfulness-judge/ADR-003`.
+
+Note what the first clause does *not* say, and note that it has now survived two moves unchanged:
+**the gated count is still one.** Both repos left the unwired column without entering the gated one,
+which is exactly the distinction the ladder exists to keep visible — three of six repos now run an
+eval, one of them blocks a merge on it. A number that runs on every PR and blocks nothing is a
+report on a shorter timer, not a bar. The two tier-1 repos are also stuck there for *different*
+reasons, which is worth keeping straight: `kb-agent` needs more CI runs, which time supplies;
+`faithfulness-judge` needs a second sample that no amount of CI can produce.
 
 ### Rollout — who should move, and what it costs
 
@@ -335,15 +341,34 @@ second sample. The finding above therefore stands unchanged: no floor can be nam
 number to resist is 0.741, which now looks eligible in a way it was not last week precisely
 *because* it was measured where the gate would run.
 
-**`faithfulness-judge`: 0 → 1, cheaply; 2 is a separate question.** `src/score.py` is offline and
-deterministic over committed label files, so recomputing agreement in CI costs one workflow step
-and no money — there is no corpus-provenance blocker here at all, which makes it the cheapest
-tier-1 move in the fleet. Tier 2 should **not** be assumed to follow: an agreement statistic
-measured once has no noise band under it, so the same refusal the classifier applied to its scale
-run applies here, and a floor would have to wait on a repeat measurement. There is also a
-worthwhile move that is not on this ladder: the README's restated figures could be asserted
-against `evals/results.md` (`SYS-019` tier 1 or 2) today, which fixes a claim-drift risk without
-touching CI's eval posture at all.
+**`faithfulness-judge`: 0 → 1 — done 2026-08-02; 2 is a separate question, and the answer is not
+"later," it is "blocked."** `src/score.py` is offline and deterministic over committed label files,
+so recomputing agreement in CI costs one workflow step and no money — there was no
+corpus-provenance blocker here at all, which is what made it the cheapest tier-1 move in the fleet,
+and it landed as predicted ([`faithfulness-judge/ADR-003`](https://github.com/sanlee-ys/faithfulness-judge/blob/main/decisions/003-score-in-ci.md),
+merged as [PR #18](https://github.com/sanlee-ys/faithfulness-judge/pull/18)). It cost two steps in
+`tests.yml`, and the shape is worth recording because the cheap version would have been theater:
+`score.py` is a pure function over committed files, so the step **deletes `evals/results.md` before
+regenerating it** and then fails a `git diff --exit-code` on the artifact. Without the `rm`, the
+check compares git's checkout to git's checkout and passes vacuously if `score.py` ever stops
+writing the file. It fails on staleness, never on a value — no floors file, no gate script, no
+required status check.
+
+Tier 2 should **not** be assumed to follow, and this is now firmer than when it was written as a
+caution. An agreement statistic measured once has no noise band under it, so the same refusal the
+classifier applied to its scale run applies here. What the tier-1 work established is that CI
+**cannot supply the missing sample**: it recomputes the same deterministic function over the same
+committed bytes and returns the identical figure every run, so a reproduction is not a second
+sample. A real one needs the judges re-run, which costs money and which that repo's `CLAUDE.md`
+forbids doing to double-check. Contrast `kb-agent`, where the same "one run is not a noise band"
+finding *is* dissolved by time, because each CI run there queries a freshly built index. Same rule,
+two different kinds of block.
+
+There is also a worthwhile move that is **not on this ladder and not done**: the README's restated
+figures could be asserted against `evals/results.md` (`SYS-019` tier 1 or 2) today, which fixes a
+claim-drift risk without touching CI's eval posture at all. ADR-003 scoped it out explicitly and by
+name, as a different decision — `SYS-019` governs what may be claimed, this governs whether it is
+enforced. It remains the larger of that repo's two open holes.
 
 **`kb-agent`'s kind-usage eval is explicitly not part of this.** `scripts/eval_kind_usage.py`
 spends one model call per gold query per run. Under the third corollary it belongs on an
@@ -405,16 +430,25 @@ is what makes the loop's verdicts mean anything. One standard at a time.
   Now/Next/Later section by `scripts/build_portal.py`, so there is no second surface to hand-edit.
 - **`portal_src/telemetry.md`** — already repointed to this decision on 2026-07-18; the adoption
   changes nothing there.
-- **`kb-agent`, `faithfulness-judge`** — the rollout rows above. Each lands as a repo-local ADR
-  citing this one, **after** adoption. Nothing in either repo is changed by this decision.
+- ~~**`kb-agent`, `faithfulness-judge`** — the rollout rows above. Each lands as a repo-local ADR
+  citing this one, **after** adoption. Nothing in either repo is changed by this decision.~~ **Both
+  landed 2026-08-02** — `kb-agent/ADR-012` and `faithfulness-judge/ADR-003`, each a repo-local ADR
+  citing this one, in the predicted order and shape. The sentence still holds as written: neither
+  repo was changed *by this decision*, which only made the work chippable.
 - **`case-study/README.md`** — describes evals-as-CI in the narrative arc without a status claim,
   so it needs no edit. Checked, not assumed.
 - **The fleet table itself** — a dated observation with a real staleness rate, by its own
   `SYS-019` classification. It is not enforced and should not be read as current once any of the
   six repos changes its CI. *The staleness rate turned out to be measured in hours, not months:*
   `kb-agent` changed its CI the same day, and the row was corrected by a human noticing, which is
-  the failure mode the deferred generate-it-from-the-workflows option exists to remove. One data
-  point is not a trigger, but it is the first one.
+  the failure mode the deferred generate-it-from-the-workflows option exists to remove. ~~One data
+  point is not a trigger, but it is the first one.~~ **Two, now** — `faithfulness-judge`'s row went
+  stale the same way and within the same day, and was likewise corrected by a human noticing rather
+  than by anything failing. Two of six rows wrong inside 24 hours is a rate, not an anecdote. Still
+  recording it rather than acting: the revisit clause this would spend belongs to `SYS-019`, and
+  the honest read is that the table went stale *because* the ladder was doing its job and repos
+  were moving — a burst during a rollout, not a steady state. Revisit if a row goes stale once the
+  rollout is finished.
 
 ### Consequences of adopting
 
