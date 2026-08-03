@@ -87,10 +87,10 @@ Stated plainly, because naming them is more credible than hiding them — and th
 - **Simulated program.** A solo project has no real cross-team coordination; the program layer is
   simulated, but the dependency, risk, and sequencing reasoning is real and transferable.
 - **A known quality ceiling.** Capped by label ambiguity — documented and accepted
-  (`system/SYS-002`), not papered over. The v1 synthetic baseline was ~79% category; at `v3.0.0`
-  on the human gold set it is <!-- metric:category_accuracy -->92.6% category
-  (macro-F1 <!-- metric:category_macro_f1 -->0.911) and <!-- metric:domain_accuracy -->92.6%
-  operational-domain (macro-F1 <!-- metric:domain_macro_f1 -->0.933). The ceiling claim has held
+  (`system/SYS-002`), not papered over. The v1 synthetic baseline was ~79% category; at `v3.2.1`
+  on the human gold set it is <!-- metric:category_accuracy -->94.4% category
+  (macro-F1 <!-- metric:category_macro_f1 -->0.930) and <!-- metric:domain_accuracy -->98.1%
+  operational-domain (macro-F1 <!-- metric:domain_macro_f1 -->0.982). The ceiling claim has held
   across three versions and has twice been used to *decline* an escalation on measured evidence
   (`classifier/ADR-012`, `classifier/ADR-013`), which is the point — a ceiling you can act on
   beats a number you can quote.
