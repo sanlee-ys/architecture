@@ -250,10 +250,13 @@ reader can point at in a file — not by intent.
 
 Three notes the rungs do not carry on their own:
 
-- **Tier 0 has a deceptive half-step.** `kb-agent` asserts its gold set's size and kind composition
-  in `pytest` while never running retrieval — *set integrity gated, set execution not*. That is a
-  genuinely useful check and it is worth having; it is also the kind of thing that reads as
-  coverage in a checks list. It does not reach tier 1, because nothing measures quality.
+- **Tier 0 has a deceptive half-step.** `kb-agent` was the worked example on the day this amendment
+  was drafted: it asserted its gold set's size and kind composition in `pytest` while never running
+  retrieval — *set integrity gated, set execution not*. That is a genuinely useful check and it is
+  worth having; it is also the kind of thing that reads as coverage in a checks list, and it does
+  not reach tier 1, because nothing measures quality. (`kb-agent` cleared it the same day and now
+  runs both eval arms; the `pytest` assertion stayed, which is the right outcome — the half-step is
+  a *stopping place* to recognise, not a check to delete.)
 - **Tier 2 is half a branch-protection setting.** A workflow cannot declare itself required. The
   classifier's own ADR-007 says this plainly, and a repo can sit at "tier 2 mechanism, tier 1
   effect" indefinitely without any file being wrong. When placing a repo, check the setting, not
@@ -270,36 +273,47 @@ Read off the files, with citations. This table is a dated observation, not a gua
 | Repo | Tier | Evidence | What is *not* gated |
 |---|---|---|---|
 | **defense-news-classifier** | **3** | Offline gate on push/PR runs `src/eval_gate.py` against floors in `evals/thresholds.toml`; partial-snapshot refusal in `_check_sample_size()`; provenance sidecar written by the producer and read by *both* `src/eval_gate.py` and `scripts/gen_metrics_artifact.py`; live lane restricted to `workflow_dispatch`/`schedule`; `evals/metrics.json` published and asserted by three downstream repos. | The required-status-check half of tier 2 is a branch-protection setting the workflow cannot declare. ADR-007 also volunteers that shared loose floors make the per-PR leg a **weak drift detector** — it trips on a large regression or a broken scorer, not on small real drift. |
-| **kb-agent** | **0** *(gold-set integrity gated; execution not)* | `ci.yml` runs ruff, two cross-repo contract checks, the ADR lint and `pytest`. `tests/test_eval_retrieval.py` asserts the gold set's size and kind composition. `scripts/eval_retrieval.py` appears in no workflow. | Retrieval quality entirely. Blocked at tier 1 by §3, still: `projects.yaml`'s `notes_dirs` is an absolute Windows path, `scripts/index.py` reads it with no env override, and a missing notes directory is **skipped with a warning rather than erroring** — so a naive gate would score the notes-kind queries as misses while the job stayed green. The precondition this decision named in July is unchanged in August. |
+| **kb-agent** | **1** *(as of 2026-08-02; was 0 when this amendment was drafted the same day)* | `ci.yml` shallow-clones `learning-notes`, builds the index against the clone via `KB_AGENT_NOTES_DIRS`, and runs **both** arms of `scripts/eval_retrieval.py` — unfiltered and `--kind-filter` — as reporting steps on every push and pull request ([`kb-agent/ADR-012`](https://github.com/sanlee-ys/kb-agent/blob/main/decisions/ADR-012-reconstruct-the-notes-corpus-in-ci.md)). §3's entry condition is met: a configured-but-absent notes dir now raises `FileNotFoundError` in `scripts/index.py` rather than skipping with a warning, so a short corpus fails the job instead of quietly scoring as bad retrieval. `tests/test_eval_retrieval.py` still asserts the gold set's size and kind composition. | The value, deliberately. There is no floors file, no gate script, and no required status check — a non-zero exit on either arm means the harness broke, not that retrieval regressed. Tier 2 is unstarted and correctly so: the first CI run (unfiltered recall@1 0.741 / recall@5 0.926 / MRR 0.813; `--kind-filter` recall@1 0.963 / MRR 0.981; 269 chunks over 44 files) is **one** measurement, and ADR-014's rule wants run-to-run noise under a floor. `scripts/eval_kind_usage.py` remains out of CI by design. |
 | **faithfulness-judge** | **0** | `tests.yml` is `ruff` + `pytest`, deliberately keyless. The agreement statistics are computed by `src/score.py`, which is offline and reads committed label files, and writes `evals/results.md`. Nothing in CI runs it. | The eval itself, and also the *claims*: `README.md` and `CLAUDE.md` restate figures from `evals/results.md` under a written human rule to reconcile them by hand. That is `SYS-019` tier 3 for a number the repo already computes deterministically. |
 | **notes-api** | **n/a — no eval** | Gates contracts, not measurements: `scripts/gen_contract_schema.py --check` regenerates the provider-owned schema and fails if stale; `scripts/check_classify_contract.py` asserts the consumer half. | Nothing. This is the correct instrument for what this repo publishes; see the rollout note below. |
 | **learning-notes** | **n/a — no eval** | Carries the closest adjacent mechanism in the system: `scripts/check_published_metrics.py` runs as its own CI job and asserts *another repo's* numbers as quoted here, failing on mismatch, on an unknown key, **and on zero markers**. Plus a generated-file drift job. | Nothing. |
 | **architecture** *(this repo)* | **n/a — no eval** | Same adjacent shape one repo over: `scripts/check_program_metrics.py`, plus `scripts/lint_decision_log.py`, both with failure-path tests because running a guard against content it passes only exercises its happy path. | Nothing. |
 
-The honest summary of that table: **one repo of six gates an eval, and the two repos that hold an
-unwired harness are blocked for entirely different reasons** — `kb-agent` by corpus
-reconstructibility, `faithfulness-judge` by nothing at all.
+The honest summary of that table: **one repo of six gates an eval, and exactly one repo still holds
+a harness that CI never runs** — `faithfulness-judge`, blocked by nothing at all. `kb-agent` was the
+second such repo for the length of an afternoon; it was blocked by corpus reconstructibility, and
+that is now cleared. Note what the first clause does *not* say: reaching tier 1 moved `kb-agent` out
+of the unwired column without moving the gated count, which is the distinction the ladder exists to
+keep visible. A number that runs on every PR and blocks nothing is a report on a shorter timer, not
+a bar.
 
 ### Rollout — who should move, and what it costs
 
 Adopting this decision does not move anything. These are the work items adoption makes
 *chippable*; each is its own repo-local ADR, per the original's `kb-agent` note.
 
-**`kb-agent`: 0 → 1, then 1 → 2.** The obvious candidate, because `scripts/eval_retrieval.py`
-needs no API key and embeds locally — it is free and deterministic, so gating it costs runner
-minutes and nothing else. The ordering is the original §3's, unchanged, and the cost is almost
-entirely in the first step:
+**`kb-agent`: 0 → 1 — done 2026-08-02; 1 → 2 remains open.** The obvious candidate, because
+`scripts/eval_retrieval.py` needs no API key and embeds locally — it is free and deterministic, so
+gating it costs runner minutes and nothing else. The ordering is the original §3's, unchanged, and
+the cost was almost entirely in the first step:
 
-1. Make the notes corpus reconstructible — an env override read by `scripts/index.py`, or a
-   CI-written `projects.yaml`. This is the real work.
-2. Shallow-clone `learning-notes` in the job and point the index at it. Precedent is in this
-   repo: `.github/workflows/portal.yml` already clones sibling repos, and `learning-notes` is
-   public, so no token is involved.
-3. Build the index in the job. The model and Chroma caches `ci.yml` already keeps for the
-   integration test cover the download cost.
-4. Run the harness with `--json` and commit the result as the baseline. **This is the measurement
-   that tier 2 needs and does not yet exist.**
-5. Only then: a gate script and a floors file.
+1. ~~Make the notes corpus reconstructible — an env override read by `scripts/index.py`, or a
+   CI-written `projects.yaml`. This is the real work.~~ **Done** — `KB_AGENT_NOTES_DIRS`, an
+   `os.pathsep`-separated override of `projects.yaml`'s `notes_dirs`. It came with a second change
+   the plan did not name and should have: a configured-but-absent directory now **raises** instead
+   of skipping with a warning, because the skip is the failure mode that makes a short corpus look
+   like bad retrieval on a green job.
+2. ~~Shallow-clone `learning-notes` in the job and point the index at it.~~ **Done**, on the
+   predicted precedent, with no token. One thing the plan missed: the clone's *directory name* is
+   load-bearing, since a note's `source` is `<dirname>/<file>.md` and the gold set spells them
+   `learning-notes/…`.
+3. ~~Build the index in the job.~~ **Done** — 269 chunks over 44 files, and the existing caches
+   covered the model download as predicted.
+4. ~~Run the harness with `--json` and commit the result as the baseline.~~ **Partly done, and the
+   remaining part is deliberate.** Both arms run and report on every push and PR. No result is
+   committed as a baseline, because one CI run is not a floor's worth of measurement — see below.
+5. Only then: a gate script and a floors file. **Not started; this is the whole of the remaining
+   1 → 2 move**, and it is a separate job.
 
 **What floor values would the gate use? None that can be named today, and that is the finding.**
 The retrieval figures `kb-agent` currently quotes in its README prose were measured on the
@@ -312,6 +326,14 @@ un-reconstructible environment, so they are not eligible either. The runs that *
 are the ones step 4 produces in CI — **plural**, because ADR-014's rule requires run-to-run noise
 under the floor and one pass cannot supply it. Reconstruct → measure in CI, more than once →
 set floors → gate.
+
+*Updated 2026-08-02 — the first eligible run exists, and it is still one run.* CI now reports
+unfiltered recall@1 0.741 / recall@5 0.926 / MRR 0.813 and `--kind-filter` recall@1 0.963 /
+MRR 0.981. It reproduced a workstation run of the same recipe to three decimals, which is
+reassuring about determinism and says **nothing** about run-to-run noise — a reproduction is not a
+second sample. The finding above therefore stands unchanged: no floor can be named yet, and the
+number to resist is 0.741, which now looks eligible in a way it was not last week precisely
+*because* it was measured where the gate would run.
 
 **`faithfulness-judge`: 0 → 1, cheaply; 2 is a separate question.** `src/score.py` is offline and
 deterministic over committed label files, so recomputing agreement in CI costs one workflow step
@@ -369,12 +391,18 @@ is what makes the loop's verdicts mean anything. One standard at a time.
   ("system-wide pattern proposed in `SYS-017`") and the learning-sequence item ("settling
   `SYS-017`, which is still `Proposed`"). Both swept in the adopting PR. The keystone line's
   maturity marker is now accurate for the first time since the classifier pilot shipped.
-- **`program/README.md` — risk R6 and the `Next` entry.** Deliberately **not edited**. Both remain
+- ~~**`program/README.md` — risk R6 and the `Next` entry.** Deliberately **not edited**. Both remain
   true after adoption: R6's remaining piece is still corpus provenance, and `Evals-as-CI for
   kb-agent` is still `Next` — this decision ratifies a standard, it does not wire a gate. What
   adoption gives R6 is vocabulary (it can now say `kb-agent` is at tier 0 and why), and that is a
   reason to revise the row when it is next touched, not a correction owed today. Recorded so a
-  later reader can tell an untouched surface from an unswept one.
+  later reader can tell an untouched surface from an unswept one.~~ **Touched, and swept, later the
+  same day** — `kb-agent/ADR-012` closed the corpus-provenance piece, so the deferral's own trigger
+  fired within hours of being written. R6 now records provenance as done and names what is actually
+  left (floors, a gate, a required check); the `Next` entry is narrowed to the 1 → 2 move rather
+  than ticked, because `Evals-as-CI for kb-agent` is not finished at tier 1. `program/README.md` is
+  the single edit point for both: the portal's roadmap page is **generated** from its
+  Now/Next/Later section by `scripts/build_portal.py`, so there is no second surface to hand-edit.
 - **`portal_src/telemetry.md`** — already repointed to this decision on 2026-07-18; the adoption
   changes nothing there.
 - **`kb-agent`, `faithfulness-judge`** — the rollout rows above. Each lands as a repo-local ADR
@@ -383,7 +411,10 @@ is what makes the loop's verdicts mean anything. One standard at a time.
   so it needs no edit. Checked, not assumed.
 - **The fleet table itself** — a dated observation with a real staleness rate, by its own
   `SYS-019` classification. It is not enforced and should not be read as current once any of the
-  six repos changes its CI.
+  six repos changes its CI. *The staleness rate turned out to be measured in hours, not months:*
+  `kb-agent` changed its CI the same day, and the row was corrected by a human noticing, which is
+  the failure mode the deferred generate-it-from-the-workflows option exists to remove. One data
+  point is not a trigger, but it is the first one.
 
 ### Consequences of adopting
 
