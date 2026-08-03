@@ -208,6 +208,118 @@ def test_unknown_metric_key_is_caught(configure, tmp_path):
     assert any("metric key 'categry_accuracy' is not in the artifact" in p for p in problems)
 
 
+# --- placement: a marker that begins a line -------------------------------------------
+#
+# The failure these pin is the inverse of the usual one. Drift is loud once someone looks;
+# this is silent by construction — the marker is invisible in the SOURCE (so review misses
+# it) and stops being invisible on the RENDERED page (so readers get literal `**`). Four
+# offences had shipped in this repo before the rule existed, and the checker was green for
+# every one of them.
+#
+# Note that every fixture above places its markers after text on the line. That is load-
+# bearing, not incidental: in faithfulness-judge four pre-existing tests had column-zero
+# fixtures, which would have documented the broken shape as the correct one.
+
+
+def test_marker_at_column_zero_is_caught(configure, tmp_path):
+    broken = LOCAL_CLEAN.replace(
+        "The classifier is at <!-- version:classifier -->**v3.1.0** today.",
+        "The classifier is at\n<!-- version:classifier -->**v3.1.0** today.",
+    )
+    configure(tmp_path=tmp_path, local_text=broken)
+    problems, _, _, _ = cpm.scan()
+    assert any(
+        "local.md:4: a marker is the first thing on this line" in p for p in problems
+    )
+
+
+def test_marker_indented_inside_a_list_item_is_caught(configure, tmp_path):
+    """The shape that actually shipped here, and the reason `^<!--` alone is not enough.
+
+    Indented to a list item's content column the marker does not *look* line-initial, but
+    an HTML block opens on up to three spaces and the item's content starts at column 2.
+    All four offences in `product/one-pager.md` and `case-study/README.md` were this.
+    """
+    broken = LOCAL_CLEAN + (
+        "\n- **Classification quality** — on the n=54 gold set it is\n"
+        "  <!-- metric:category_accuracy -->**92.6%** category, which has held.\n"
+    )
+    configure(tmp_path=tmp_path, local_text=broken)
+    problems, _, _, _ = cpm.scan()
+    assert any(
+        "local.md:6: a marker is the first thing on this line" in p for p in problems
+    )
+
+
+def test_line_initial_marker_is_caught_on_a_remote_surface(configure, tmp_path):
+    """Remote surfaces get the same rule — the render they break is a published page."""
+    broken = REMOTE_CLEAN.replace(
+        "- category <!-- metric:category_accuracy -->**92.6%**",
+        "- category\n  <!-- metric:category_accuracy -->**92.6%**",
+    )
+    configure(tmp_path=tmp_path, remote_text=broken)
+    problems, _, _, _ = cpm.scan()
+    assert any(
+        f"{REMOTE_LABEL}:6: a marker is the first thing on this line" in p
+        for p in problems
+    )
+
+
+def test_line_initial_marker_fails_even_when_its_value_is_correct(configure, tmp_path):
+    """Placement is the defect. A value that matches the artifact does not excuse it.
+
+    This is what makes the rule necessary rather than redundant: every one of the four
+    offences in this repo carried a perfectly correct number.
+    """
+    broken = LOCAL_CLEAN.replace(
+        "The classifier is at <!-- version:classifier -->**v3.1.0** today.",
+        "The classifier is at\n<!-- version:classifier -->**v3.1.0** today.",
+    )
+    configure(tmp_path=tmp_path, local_text=broken)
+    problems, _, _, _ = cpm.scan()
+    assert not any("described as v" in p for p in problems), "the value is correct"
+    assert any("first thing on this line" in p for p in problems)
+
+
+def test_line_initial_marker_inside_a_fence_is_documentation_not_a_use(configure, tmp_path):
+    """`engineering/README.md` documents this convention; documenting it must not invoke it.
+
+    The example there is a one-liner today, but the natural way to show a *placement* rule
+    is a fenced block with the bad shape in it, so this has to be safe.
+    """
+    documented = LOCAL_CLEAN + (
+        "\nNever write it like this:\n\n"
+        "```markdown\n"
+        "category accuracy\n"
+        "<!-- metric:category_accuracy -->92.6%\n"
+        "```\n"
+    )
+    configure(tmp_path=tmp_path, local_text=documented)
+    problems, _, _, _ = cpm.scan()
+    assert not any("first thing on this line" in p for p in problems)
+
+
+def test_line_number_is_the_editors_line_number(configure, tmp_path):
+    """Reported lines are computed on the RAW text, not the code-stripped copy.
+
+    `scan()` deletes fenced blocks before matching. If the placement rule ran on that copy,
+    every line after a fence would be reported short by the height of the fence, and the
+    directed message would point a reader at the wrong line — which is worse than no line
+    number, because it looks authoritative.
+    """
+    with_fence = (
+        LOCAL_CLEAN
+        + "\n```python\nx = 1\ny = 2\nz = 3\n```\n\nCurrent figures:\n"
+        + "<!-- metric:category_accuracy -->**92.6%**\n"
+    )
+    configure(tmp_path=tmp_path, local_text=with_fence)
+    problems, _, _, _ = cpm.scan()
+    offence = next(p for p in problems if "first thing on this line" in p)
+    # The marker is on line 12 of the file as written; the fence is 5 lines of it.
+    assert with_fence.splitlines()[11].startswith("<!-- metric:")
+    assert "local.md:12:" in offence
+
+
 def test_unmarked_number_over_allowance_is_caught(configure, tmp_path):
     """The coverage ratchet: a NEW metric-shaped number nobody marked fails the build.
 

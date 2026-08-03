@@ -19,6 +19,25 @@ The comment is invisible in rendered Markdown and on the generated portal. The k
 exist in the artifact's ``gold`` object; a typo fails rather than silently checking
 nothing.
 
+WHERE A MARKER MAY GO. Anywhere except the start of a line. The comment is invisible
+*mid-line*; a line that BEGINS with ``<!--`` opens a CommonMark/GFM **HTML block**, which
+closes the paragraph above it and suspends inline markdown parsing until the next blank
+line. So a line-initial marker splits a paragraph on the rendered page and leaves ``**``
+and backticks showing as literal characters — while the source looks fine and this
+checker reports a clean pass.
+
+That is not theoretical: it had shipped here. `product/one-pager.md` was rendering four
+figures as literal ``**0.911**`` asterisks on GitHub and on the portal, and
+`case-study/README.md` was losing its line breaks, both since the markers were added.
+Confirmed by rendering both files through GitHub's own ``/markdown`` API and diffing
+against a marker-moved version, then fixed in the same change (2026-08-02).
+
+Indentation does not save it, which is why this needs a checker and not a habit: an HTML
+block opens on up to three spaces, and inside a list item the marker is indented to the
+item's content column, so it does not *look* line-initial. All four offences here were
+that shape. A marker must always follow text on its line; wrap the prose around it rather
+than onto the next line.
+
 WHAT IS DELIBERATELY NOT MARKED. Historical figures ("the v1 synthetic baseline was
 ~79%") are frozen records of past runs and must NOT track the latest artifact — marking
 them would make the guard rewrite history on every release. That is the same reasoning
@@ -79,6 +98,7 @@ drift impossible.
 FAILURE POLICY (matches `SYS-018` and the portfolio check):
   - marked value mismatches artifact -> exit 1. The real guard.
   - unknown metric key               -> exit 1. A typo checks nothing and passes forever.
+  - marker at the start of a line    -> exit 1. It silently breaks the rendered page.
   - unmarked count over allowance    -> exit 1. New unguarded numbers do not get in.
   - zero marked figures              -> exit 1. A check verifying nothing reads as a pass.
   - remote marker count off          -> exit 1. Asserted per surface AND per marker type;
@@ -191,6 +211,17 @@ MARKER = re.compile(r"<!--\s*metric:([A-Za-z0-9_]+)\s*-->\s*\**\s*(\d+(?:\.\d+)?
 # The zero-marker guard in main() now makes that failure loud instead of invisible.
 VERSION_MARKER = re.compile(r"<!--\s*version:classifier\s*-->\s*\**\s*v?(\d+\.\d+\.\d+)")
 
+# A marker of EITHER type that is the first non-whitespace thing on its line. See "WHERE A
+# MARKER MAY GO" above. Matched loosely — any `metric:`/`version:` comment, well-formed or
+# not — because the damage is done by the `<!--` opening the line, whatever follows it.
+#
+# NB: this is the one rule that must read the RAW text rather than the code-stripped copy
+# scan() works on. Stripping a fenced block to nothing shifts every line after it, so line
+# numbers computed on the stripped text point at the wrong place; and it can invent or erase
+# a line-initial position that never existed in the file a human has to edit. Code spans are
+# skipped by POSITION instead.
+LINE_INITIAL_MARKER = re.compile(r"^[ \t]*(<!--\s*(?:metric|version):)", re.M)
+
 
 def fetch_artifact(url: str) -> dict | None:
     """Fetch the published metrics artifact, or None if it cannot be read."""
@@ -290,6 +321,23 @@ def scan() -> tuple[list[str], int, dict[str, list[str]], set[str]]:
         # page documenting the convention is not read as using it.
         text = CODE.sub("", raw)
         seen_here = {"version": 0, "metric": 0}
+
+        # Placement, checked on the raw text so the reported line number is the one the
+        # editor shows. A marker here is invisible in the source and NOT invisible on the
+        # rendered page - the exact inversion of what the convention promises.
+        code_spans = [m.span() for m in CODE.finditer(raw)]
+        for match in LINE_INITIAL_MARKER.finditer(raw):
+            if any(lo <= match.start(1) < hi for lo, hi in code_spans):
+                continue
+            line = raw.count("\n", 0, match.start(1)) + 1
+            problems.append(
+                f"{rel}:{line}: a marker is the first thing on this line. That opens a "
+                f"markdown HTML block, which closes the paragraph above it and stops "
+                f"inline formatting until the next blank line - so the rendered page "
+                f"breaks (literal ** and backticks) while the source looks fine and this "
+                f"check passes. Move the marker onto the end of the previous line and "
+                f"re-wrap; it must always follow text."
+            )
 
         for shown in VERSION_MARKER.findall(text):
             marked += 1
