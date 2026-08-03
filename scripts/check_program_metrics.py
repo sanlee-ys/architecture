@@ -50,6 +50,18 @@ are excluded by design — an ADR is a **dated record** of what was true when it
 written, and `SYS-009`'s guarantee-vs-observation rule says such a document should not be
 re-synced to today's numbers. Scanning them would generate pressure to do exactly that.
 
+EXCEPT FOR PLACEMENT, WHICH IS SWEPT OVER EVERY MARKDOWN FILE. That exclusion is right for
+every rule that asks *"is this number still current?"* — and wrong for the one rule that
+does not. Placement asks *"does this file render correctly?"*, and a line-initial marker
+splits the paragraph and leaks literal `**` whether the figure beside it is live,
+historical, or an ADR's frozen record. A marker in `decisions/` could break its own page
+with nothing to notice, because `SCANNED` never looked there.
+
+So `sweep_paths` walks every `.md` in the tree and applies the placement rule ALONE.
+`SCANNED` is untouched for the value, version, unknown-key and coverage-ratchet rules.
+Nothing the sweep reports can create pressure to restate a number: the only fix it ever
+asks for is moving a marker onto the end of the previous line, which changes no value.
+
 SURFACES IN OTHER REPOS. `REMOTE_SCANNED` fetches a published file over HTTPS and scans
 it with the identical logic. Added 2026-07-26 for the GitHub profile README
 (`sanlee-ys/sanlee-ys`), which was found advertising the classifier at v3.0.0 the day
@@ -99,6 +111,10 @@ FAILURE POLICY (matches `SYS-018` and the portfolio check):
   - marked value mismatches artifact -> exit 1. The real guard.
   - unknown metric key               -> exit 1. A typo checks nothing and passes forever.
   - marker at the start of a line    -> exit 1. It silently breaks the rendered page.
+                                        Checked in EVERY markdown file, not just SCANNED,
+                                        and checked even when the artifact fetch fails —
+                                        it needs no artifact, so an outage must not
+                                        quietly switch it off.
   - unmarked count over allowance    -> exit 1. New unguarded numbers do not get in.
   - zero marked figures              -> exit 1. A check verifying nothing reads as a pass.
   - remote marker count off          -> exit 1. Asserted per surface AND per marker type;
@@ -137,6 +153,28 @@ SCANNED = (
     "product/one-pager.md",
     "engineering/README.md",
     "case-study/README.md",
+)
+
+# Directories the placement sweep does not own. Same set as `lint_decision_log.py`'s
+# whole-repo sweep, for the same reason — `portal/` and `site/` are generated (a marker
+# there is a copy of one in a source file already being checked, and "fixing" it would be
+# editing build output), the rest are version control, agent scratch space, environments
+# and caches. `.claude` holds agent worktrees, which are entire second checkouts of this
+# repo, so walking it would report every finding twice under a path nobody edits.
+SWEEP_SKIP_DIRS = frozenset(
+    {
+        "portal",
+        "site",
+        "graphify-out",
+        "__pycache__",
+        ".git",
+        ".claude",
+        ".venv",
+        "venv",
+        ".pytest_cache",
+        ".ruff_cache",
+        "node_modules",
+    }
 )
 
 # Narrative surfaces in OTHER repos, fetched from their published ref. The label is what
@@ -274,6 +312,67 @@ def same_value(shown: str, published: object) -> bool:
         return shown.strip() == str(published).strip()
 
 
+def placement_problems(rel: str, raw: str) -> list[str]:
+    """Every marker in `raw` that opens a markdown HTML block by starting its line.
+
+    Takes the RAW text, never a code-stripped copy, and skips code by POSITION. Stripping
+    a fenced block to nothing shifts every line after it, so a line number computed on the
+    stripped text points at the wrong place — and it can invent or erase a line-initial
+    position that never existed in the file a human has to edit. A confidently wrong line
+    number is worse than none.
+    """
+    code_spans = [m.span() for m in CODE.finditer(raw)]
+    problems: list[str] = []
+    for match in LINE_INITIAL_MARKER.finditer(raw):
+        if any(lo <= match.start(1) < hi for lo, hi in code_spans):
+            continue
+        line = raw.count("\n", 0, match.start(1)) + 1
+        problems.append(
+            f"{rel}:{line}: a marker is the first thing on this line. That opens a "
+            f"markdown HTML block, which closes the paragraph above it and stops "
+            f"inline formatting until the next blank line - so the rendered page "
+            f"breaks (literal ** and backticks) while the source looks fine and this "
+            f"check passes. Move the marker onto the end of the previous line and "
+            f"re-wrap; it must always follow text."
+        )
+    return problems
+
+
+def sweep_paths(root: Path, scanned: tuple[str, ...] = ()) -> list[Path]:
+    """Every markdown file under `root` that `scanned` does not already cover.
+
+    The complement, not the whole tree, so a misplaced marker in a narrative surface is
+    not reported twice. Union of the two is every `.md` in the repo, which is the
+    coverage the placement rule claims.
+    """
+    already = {(root / rel).resolve() for rel in scanned}
+    found: list[Path] = []
+    for path in root.rglob("*.md"):
+        if not path.is_file():
+            continue
+        if SWEEP_SKIP_DIRS & set(path.relative_to(root).parts):
+            continue
+        if path.resolve() in already:
+            continue
+        found.append(path)
+    return sorted(found)
+
+
+def check_placement(root: Path, paths: list[Path]) -> list[str]:
+    """Apply the placement rule — and only it — to every path in `paths`.
+
+    Returns problems and nothing else: this pass has no values to compare and no markers
+    to count, because "does this file render?" does not depend on the artifact. That is
+    also why main() runs it even when the artifact fetch fails.
+    """
+    problems: list[str] = []
+    for path in paths:
+        problems += placement_problems(
+            path.relative_to(root).as_posix(), path.read_text(encoding="utf-8")
+        )
+    return problems
+
+
 def scan() -> tuple[list[str], int, dict[str, list[str]], set[str]]:
     """Check every scanned surface.
 
@@ -324,20 +423,9 @@ def scan() -> tuple[list[str], int, dict[str, list[str]], set[str]]:
 
         # Placement, checked on the raw text so the reported line number is the one the
         # editor shows. A marker here is invisible in the source and NOT invisible on the
-        # rendered page - the exact inversion of what the convention promises.
-        code_spans = [m.span() for m in CODE.finditer(raw)]
-        for match in LINE_INITIAL_MARKER.finditer(raw):
-            if any(lo <= match.start(1) < hi for lo, hi in code_spans):
-                continue
-            line = raw.count("\n", 0, match.start(1)) + 1
-            problems.append(
-                f"{rel}:{line}: a marker is the first thing on this line. That opens a "
-                f"markdown HTML block, which closes the paragraph above it and stops "
-                f"inline formatting until the next blank line - so the rendered page "
-                f"breaks (literal ** and backticks) while the source looks fine and this "
-                f"check passes. Move the marker onto the end of the previous line and "
-                f"re-wrap; it must always follow text."
-            )
+        # rendered page - the exact inversion of what the convention promises. Remote
+        # surfaces get this too; the sweep below cannot reach them, they are not files.
+        problems += placement_problems(rel, raw)
 
         for shown in VERSION_MARKER.findall(text):
             marked += 1
@@ -431,9 +519,32 @@ def main() -> int:
 
     problems, marked, unmarked, remote_surfaces_seen = scan()
 
+    # The placement sweep is run OUTSIDE scan(), and outside the fetch-failure bail below,
+    # deliberately. Every other rule here needs the artifact, so an outage legitimately
+    # skips them. Placement needs nothing but the file on disk, and a rule that quietly
+    # stops running whenever GitHub is slow is a gate that did not actually run - which
+    # this repo's own house rules count as a failure, not a pass.
+    swept = sweep_paths(REPO_ROOT, SCANNED)
+    placement = check_placement(REPO_ROOT, swept)
+
     if marked == -1:
-        print("Prose metrics check SKIPPED (see warning above).")
+        if placement:
+            print("MARKERS BREAK THE RENDERED PAGE:\n", file=sys.stderr)
+            for problem in placement:
+                print(f"  - {problem}\n", file=sys.stderr)
+            print(
+                "The metrics check itself was skipped (artifact fetch failed), but "
+                "placement does not depend on the artifact.",
+                file=sys.stderr,
+            )
+            return 1
+        print(
+            f"Prose metrics check SKIPPED (see warning above). Marker placement still "
+            f"checked in {len(swept)} markdown file(s)."
+        )
         return 0
+
+    problems += placement
 
     if args.list_unmarked:
         if not unmarked:
@@ -471,6 +582,10 @@ def main() -> int:
     for label in REMOTE_SCANNED:
         state = "checked" if label in remote_surfaces_seen else "SKIPPED (fetch failed)"
         print(f"  remote surface {label}: {state}")
+    print(
+        f"  marker placement additionally checked in {len(swept)} further markdown "
+        f"file(s); the value rules deliberately do not reach them."
+    )
     return 0
 
 
