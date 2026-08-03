@@ -63,15 +63,17 @@ distinct technique, demonstrated inside one coherent system rather than as scatt
 - **Classification quality** — per-field [precision / recall / F1](https://sanlee-ys.github.io/learning-notes/03-reading-the-numbers.html). Baseline from the existing
   classifier eval. The v1 baseline was synthetic text (operational-domain 97.3%, category ~79%),
   with the ceiling set by *label ambiguity* (industry vs. procurement), not model horsepower —
-  see `classifier/ADR-001` and `system/SYS-002`. **Current, at `v3.0.0` on the n=54 human gold
-  set:** category <!-- metric:category_accuracy -->**92.6%**
-  (macro-F1 <!-- metric:category_macro_f1 -->**0.911**),
-  operational-domain <!-- metric:domain_accuracy -->**92.6%**
-  (macro-F1 <!-- metric:domain_macro_f1 -->**0.933**),
-  region <!-- metric:region_accuracy -->**87.0%**
-  (macro-F1 <!-- metric:region_macro_f1 -->**0.927**). The ceiling is still label ambiguity, not
-  model horsepower — and two escalations have now been measured and *declined* on that basis
-  (`classifier/ADR-012`, `classifier/ADR-013`).
+  see `classifier/ADR-001` and `system/SYS-002`. **Current, at `v3.2.1` on the n=54 human gold
+  set:** category <!-- metric:category_accuracy -->**94.4%**
+  (macro-F1 <!-- metric:category_macro_f1 -->**0.930**),
+  operational-domain <!-- metric:domain_accuracy -->**98.1%**
+  (macro-F1 <!-- metric:domain_macro_f1 -->**0.982**),
+  region <!-- metric:region_accuracy -->**94.4%**
+  (macro-F1 <!-- metric:region_macro_f1 -->**0.975**). The ceiling is still label ambiguity, not
+  model horsepower — two escalations have been measured and *declined* on that basis
+  (`classifier/ADR-012`, `classifier/ADR-013`), and the one change that did move these numbers
+  was a **prompt clause, not a bigger model**, adopted only after a pre-registered re-run at
+  n=595 cleared all four of its rules (`classifier/ADR-024`).
 - **Retrieval quality (RAG)** — recall@k, answer groundedness, citation correctness.
 - **Agent task success** — pass rate on a fixed evaluation set.
 - **Regression gate** — an eval pass-rate threshold wired into CI; a change that drops below it
