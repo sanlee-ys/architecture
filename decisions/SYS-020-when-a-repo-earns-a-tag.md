@@ -58,7 +58,7 @@ of tags reads as intent rather than neglect.**
 |---|---|
 | `learning-notes`, `learning-notes-site`, `portfolio`, `sanlee-ys` | Continuously published content. Nobody pins a version of a website; a tag would encode nothing a reader could use. |
 | `dotfiles`, `agent-ops`, `architecture` | Always-latest by design. Tagging an operating layer implies a stable release you could deliberately hold back on, which is the opposite of what [agent-ops ADR-002](https://github.com/sanlee-ys/agent-ops/blob/main/decisions/ADR-002-public-first-canonicality.md) makes these repos — public-first and canonical *now*. |
-| `career`, `finance`, `job-tracker`, `github-follow-tracker`, `training` | Personal tooling with no external consumer and no published figures. Nothing to reproduce, nothing to pin. |
+| `desk`, `finance`, `job-tracker`, `github-follow-tracker`, `training` | Personal tooling with no external consumer and no published figures. Nothing to reproduce, nothing to pin. |
 
 ### The rule, stated for future repos
 

@@ -105,7 +105,7 @@ answer than a scripted rebuild. `kb-agent`'s CI already caches `~/.cache/chroma`
 
 A container remains a legitimate **later optimization** — for pinning the embedding-model version
 beyond what a cache key guarantees, and as shared substrate for the parked sandboxed-autonomy
-experiment (`career/ideas.md`). It is deferred with an explicit trigger: adopt one if cache misses
+experiment (`desk/ideas.md`). It is deferred with an explicit trigger: adopt one if cache misses
 or model-version drift actually make the gate flap. It is not a prerequisite for closing R6.
 
 ## Downstream surfaces
