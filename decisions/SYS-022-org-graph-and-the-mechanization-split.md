@@ -1,6 +1,6 @@
 # SYS-022: The fleet division of labor is this system's org graph — and a graph claim must name which half is mechanized
 
-**Status:** Accepted
+**Status:** Accepted — amended 2026-08-09 (Amendment 1)
 **Date:** 2026-08-09
 **Deciders:** San Lee
 
@@ -46,9 +46,13 @@ this system has instrumentation for.
 ## Decision
 
 **The four-vendor division of labor is this system's org graph, recorded and governed as one.
-No work-graph runtime exists. Any claim that this system practices graph engineering must
-state which graph-harness concerns are mechanized and which are hand-executed; the unqualified
-claim is not available.**
+No work-graph runtime exists at the fleet layer. Any claim that this system practices graph
+engineering must state which graph-harness concerns are mechanized and which are hand-executed;
+the unqualified claim is not available.**
+
+*(As adopted, the second sentence read "No work-graph runtime exists," without the qualifier.
+That was false — a work graph over model-call nodes exists inside one repo, was measured, and
+was declined. **See Amendment 1**, which also corrects two rows of the table below.)*
 
 The normative content is the split. Measured against the five concerns a graph harness is
 said to manage, as of 2026-08-09:
@@ -88,6 +92,54 @@ instead is the `SYS-021` move — fix the honest statement at the one moment it 
 checkable (when the claim is written), and say plainly that continuous assurance is not
 provided. Naming the bound is the point.
 
+## Amendment 1 (2026-08-09) — a work graph did exist, and the table was written from the docs
+
+Adopted and amended the same day. Five design briefs, each reading a repo's source rather than
+its documentation, falsified two claims in the record within the hour.
+
+**1. "No work-graph runtime exists" was false.** `defense-news-classifier` level **L4** of its
+autonomy ladder is a work graph: `src/l4_pipeline.py` defines an `L4Backend` seam over three
+nodes — `triage → classify → critic` — with a backward edge (the critic can bounce a label to
+`classify` with a reviewer note), a deterministic fail-closed challenge gate that discards a
+challenge naming no axis, rubric rule and evidence gap, and an append-only per-run audit log.
+Its ladder spec calls it "Multi-agent … **Built + measured**". It was not a plan. It ran.
+
+**Scoping the claim makes it stronger, not weaker.** The corrected sentence — no work-graph
+runtime at the *fleet* layer, across vendor nodes — is now backed by a measurement rather than
+by an absence. That pipeline's live result was **6/7 of a named error cluster fixed by the
+backward edge, a 57% over-challenge rate, a domain regression at p=0.016, and 4.15× cost**, and
+the pipeline was **declined as configured**; the shipped single call stays in production. The
+system's one measured work graph did not pay. An unqualified "none exists" threw that evidence
+away in order to make a tidier claim.
+
+**A gap that measurement exposes, recorded here because it is the graph layer's own failure
+mode.** L4's three governance primitives all guard against a bad *critic*. Nothing validates
+upstream state: `classify()` takes no evidence argument at all, so the classifier is blind to
+triage by construction. The guards were built at the boundary that was easy to reason about,
+not the one this decision's Context names as characteristic.
+
+**2. The table under-credited `telltale` on rows 3 and 4.** Read as source rather than as
+`docs/council.md`, the room already makes write authority a **declared token** rather than
+prose ("English does not grant permissions"), verifies a disk receipt before claiming
+authorship, and stamps artifact provenance. `/arena` additionally provides per-node isolation
+(one worktree and branch per seat off a single base SHA), run identity read from refs rather
+than guessed, four independent degrade layers, commit-per-node so a result outlives its
+worktree, and per-node kill. Row 3 ("Partial") is closer to correct than row 4 ("Weak")
+implied, and both readings were too thin.
+
+**What is *not* revised.** The rows' verdicts stand. `/arena` still has **no edges** — racers
+are isolated by construction and the run record is in-memory — so nothing carries state between
+nodes, and the join is `adopt`, which takes exactly one seat. Row 5 (dynamic node spawning) is
+unchanged. The Decision's three binding consequences are unchanged.
+
+**Root cause, which is the part worth keeping.** The table was written from documentation and a
+single search pass, not from the Go and Python it describes. Every correction above came from
+reading source. This is `SYS-021`'s Amendment 1 in a new place — that one recorded a decision
+"written from the two newest instances" that skipped the oldest, and this one recorded a
+mechanization table written from the surface that describes the mechanism instead of the
+mechanism. A record whose entire thesis is *the fitting description is not the thing* was
+itself assembled from fitting descriptions.
+
 ## Downstream surfaces
 
 - **[agent-ops `ADR-010`](https://github.com/sanlee-ys/agent-ops/blob/main/decisions/ADR-010-claude-led-four-vendor-orchestration.md)
@@ -100,6 +152,14 @@ provided. Naming the bound is the point.
 - **[agent-ops `vendors/`](https://github.com/sanlee-ys/agent-ops/blob/main/vendors/README.md)**
   — the public harness contracts, and the natural home for an edge-contract section if the
   prose rule is ever promoted to something checkable.
+- **`defense-news-classifier` (`docs/specs/autonomy-ladder.md`, `src/l4_pipeline.py`, its
+  `ADR-020`)** — **added by Amendment 1**, and omitted from this decision as adopted. Its L4 is
+  the system's one built-and-measured work graph, and the omission is the amendment's root
+  cause. The ladder is a natural place to apply this decision's claim discipline in prose —
+  naming which harness concerns L4 mechanized (static routing, real observability, code-enforced
+  node policy) and which it never had (dynamic spawning, cross-process state). **Not edited
+  here**, per the same rule that keeps this record from asserting about surfaces it did not
+  sweep.
 - **`telltale` (`docs/council.md`, `README.md`)** — the room is this system's routing and
   observability layer whether or not it is described that way. If its README ever reaches for
   the graph vocabulary, requirement 1 above governs the wording. **Not edited here.**
