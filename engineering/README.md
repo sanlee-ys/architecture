@@ -65,7 +65,7 @@ The house style every repo inherits — the conventions that make separate repos
   builds in three repos is still a lint rule.
 
 - **Agent-facing CLIs are designed against a token budget** — first-party CLIs an agent is
-  expected to drive (the classifier's eval harness, `netops-lab` provisioning, `career`'s
+  expected to drive (the classifier's eval harness, `netops-lab` provisioning, `desk`'s
   dashboard commands, anything new) treat context cost as a design constraint, not an
   afterthought. Adopted from [AXI](https://github.com/kunchenguid/axi) (MIT), 2026-07-26, as
   **design guidance — not a dependency.** Ten rules in three groups:
