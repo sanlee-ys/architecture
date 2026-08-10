@@ -5,10 +5,11 @@ choices that span more than one repo are recorded and kept consistent.
 
 The projects this covers:
 
-- **[telltale](https://github.com/sanlee-ys/telltale)** — statusline + cross-vendor HUD for coding agents where every number is traceable to measured output.
+- **[telltale](https://github.com/sanlee-ys/telltale)** — honest gauge / dispatch room (council) + statusline + cross-vendor HUD, every number measured.
 - **[agent-ops](https://github.com/sanlee-ys/agent-ops)** — operating layer for running a multi-vendor AI agent fleet (security posture, credential guards, postmortems).
 - **[kb-agent](https://github.com/sanlee-ys/kb-agent)** — RAG + tool-use agent over my projects (the hub).
 - **[defense-news-classifier](https://github.com/sanlee-ys/defense-news-classifier)** — LLM classifier with a real eval harness.
+- **[faithfulness-judge](https://github.com/sanlee-ys/faithfulness-judge)** — measures LLM-judge reliability for groundedness (can it catch unsupported claims?).
 - **[notes-api](https://github.com/sanlee-ys/notes-api)** — Python/FastAPI notes REST API.
 - **[learning-notes](https://github.com/sanlee-ys/learning-notes)** — plain-language notes on the concepts behind these projects, with an [interactive concept map](https://sanlee-ys.github.io/learning-notes/concept-map.html).
 
