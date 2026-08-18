@@ -1,41 +1,25 @@
 # Architecture
 
-System-level architecture decisions and conventions for my projects — the place where
-choices that span more than one repo are recorded and kept consistent.
+System-level decisions that span more than one repo.
+Each record is a numbered `SYS-NNN` file under [`decisions/`](decisions/).
 
-The projects this covers:
+The log covers these repos:
 
-- **[telltale](https://github.com/sanlee-ys/telltale)** — honest gauge / dispatch room (council) + statusline + cross-vendor HUD, every number measured.
-- **[agent-ops](https://github.com/sanlee-ys/agent-ops)** — operating layer for running a multi-vendor AI agent fleet (security posture, credential guards, postmortems).
-- **[kb-agent](https://github.com/sanlee-ys/kb-agent)** — RAG + tool-use agent over my projects (the hub).
-- **[defense-news-classifier](https://github.com/sanlee-ys/defense-news-classifier)** — LLM classifier with a real eval harness.
-- **[faithfulness-judge](https://github.com/sanlee-ys/faithfulness-judge)** — measures LLM-judge reliability for groundedness (can it catch unsupported claims?).
-- **[notes-api](https://github.com/sanlee-ys/notes-api)** — Python/FastAPI notes REST API.
-- **[learning-notes](https://github.com/sanlee-ys/learning-notes)** — plain-language notes on the concepts behind these projects, with an [interactive concept map](https://sanlee-ys.github.io/learning-notes/concept-map.html).
+- **[telltale](https://github.com/sanlee-ys/telltale):** dispatch room, statusline, HUD
+- **[agent-ops](https://github.com/sanlee-ys/agent-ops):** fleet operating layer
+- **[kb-agent](https://github.com/sanlee-ys/kb-agent):** RAG and tool-use hub
+- **[defense-news-classifier](https://github.com/sanlee-ys/defense-news-classifier):** LLM classifier and eval harness
+- **[faithfulness-judge](https://github.com/sanlee-ys/faithfulness-judge):** LLM-judge reliability
+- **[notes-api](https://github.com/sanlee-ys/notes-api):** notes REST API
+- **[learning-notes](https://github.com/sanlee-ys/learning-notes):** plain-language concept notes
 
-## Product context
+Related surfaces:
 
-What this system is *for* — the primary user, the problem, success metrics, and scope — lives in
-the **[product one-pager](product/one-pager.md)**. The architecture decisions below are made in
-service of it.
-
-The **[program view](program/README.md)** holds the program-management layer — workstreams, a
-dependency map, a Now/Next/Later roadmap, and a risk register.
-
-The **[engineering view](engineering/README.md)** is the technical-craft companion — the AI-skill
-substrate (`SYS-007`), the cross-repo engineering standards, and a reading map of where the depth lives.
-
-The **[case study](case-study/README.md)** is the reflective companion — the decisions that shaped
-the system and what the project demonstrates. It also carries an **external-validation** check — a
-[trend-by-trend mapping](case-study/2026-agentic-coding-trends-mapping.md) of the system's practices
-against Anthropic's 2026 Agentic Coding Trends Report.
-
-**New here, or not deep in the tech?** The **[learning-notes](https://github.com/sanlee-ys/learning-notes)** are the
-plain-language companion to all of the above — what each term in these docs (RAG, tool-use, evals, event-driven
-messaging…) actually means, in five short sections per idea. Start with the
-**[interactive concept map](https://sanlee-ys.github.io/learning-notes/concept-map.html)** for a one-screen picture of
-how the pieces connect, or read the **[notes site](https://sanlee-ys.github.io/learning-notes/)** in order. The
-jargon-heavy docs link into the relevant note where a term first comes up.
+- **[product one-pager](product/one-pager.md):** user, problem, success metrics, and scope
+- **[program view](program/README.md):** workstreams, roadmap, and risk register
+- **[engineering view](engineering/README.md):** AI-skill map and engineering standards
+- **[case study](case-study/README.md):** decisions that shaped the system
+- **[learning-notes](https://github.com/sanlee-ys/learning-notes):** plain-language notes on the terms
 
 ## How decisions are organized
 
