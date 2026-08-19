@@ -183,10 +183,10 @@ For going deeper (and for downtime reading) — the real artifacts, by repo:
 
 | Repo | Read it for |
 |---|---|
-| [`defense-news-classifier`](https://github.com/sanlee-ys/defense-news-classifier) | the eval harness, the synthetic-data / circular-eval trap, the `/classify` service, the classical baseline the LLM was priced against, and the autonomy ladder L1–L4 with the measured declines at its top two rungs; ADRs 001–020 |
+| [`defense-news-classifier`](https://github.com/sanlee-ys/defense-news-classifier) | the eval harness, the synthetic-data / circular-eval trap, the `/classify` service, the classical baseline the LLM was priced against, and the autonomy ladder L1–L4 with the measured declines at its top two rungs; `ADR-001` onward |
 | [`kb-agent`](https://github.com/sanlee-ys/kb-agent) | the manual tool-use loop, RAG retrieval, the observation-shape refactor |
 | [`notes-api`](https://github.com/sanlee-ys/notes-api) | Python/FastAPI REST API; SQLAlchemy 2.0 ORM; async tag enrichment via BackgroundTasks (CLASSIFIER_URL seam); `ADR-001`–`002` |
-| [`architecture`](..) | the system decisions (`SYS-001`–`010`), the program view, the product one-pager, the case study |
+| [`architecture`](..) | the system decisions (`SYS-001` onward), the program view, the product one-pager, the case study |
 | [`learning-notes`](https://github.com/sanlee-ys/learning-notes) | the plain-language concept behind each technique, and the D3 concept-map graph |
 
 > **Note:** this table is the closest thing to a single reading surface today, and it's hand-kept. A

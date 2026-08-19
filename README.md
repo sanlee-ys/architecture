@@ -56,7 +56,7 @@ which is which. It is *not* a ranking — a `Standard` can be more rigorously en
 | [SYS-001](decisions/SYS-001-record-architecture-decisions.md) | Practice | Record architecture decisions as two-tier ADRs | Accepted |
 | [SYS-002](decisions/SYS-002-model-tier-standard.md) | Standard | Build on the Anthropic API; default to Sonnet, escalate to Opus only where it pays | Accepted |
 | [SYS-003](decisions/SYS-003-agent-tool-layer-contract.md) | Contract | A contract for how kb-agent exposes and calls cross-system tools | Accepted |
-| [SYS-004](decisions/SYS-004-classify-http-contract.md) | Contract | Freeze the /classify HTTP contract between the classifier and kb-agent | ⚠️ **Accepted — BREACHED** |
+| [SYS-004](decisions/SYS-004-classify-http-contract.md) | Contract | Freeze the /classify HTTP contract between the classifier and kb-agent | Accepted — breached 2026-07-18, closed 2026-07-19 |
 | [SYS-005](decisions/SYS-005-event-loop-contract.md) | Contract | Close the classify-and-writeback loop — freeze the BackgroundTask + tags-writeback contract | Accepted |
 | [SYS-006](decisions/SYS-006-notes-read-contract.md) | Contract | Freeze the GET /notes read contract between kb-agent and notes-api | Accepted |
 | [SYS-007](decisions/SYS-007-engineering-substrate-and-ai-skills.md) | Strategy | Engineering is the substrate of the product & program tracks; an AI-skill map across all three | Accepted |
