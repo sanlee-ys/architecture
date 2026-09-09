@@ -468,3 +468,11 @@ is what makes the loop's verdicts mean anything. One standard at a time.
 - **Revisit when:** a second repo reaches tier 2, or when the prompt-optimization loop starts —
   whichever comes first. The second event is the one that will test whether the ladder's rungs were
   cut in the right places.
+
+**Revisit fired 2026-09-09.** `kb-agent` reached tier 2 (`kb-agent/ADR-013`, PR #113).
+Floors, gate script, and a CI step grade both retrieval arms on every push and PR.
+The required status check is the existing `test` job; the gate is a step inside it.
+A floor breach fails that required check. The fleet table above is a dated 2026-08-02
+observation and now understates `kb-agent`; this line is the correction, not a rewrite
+of the table. The prompt-optimization loop is still the sequenced successor and has
+not begun.
