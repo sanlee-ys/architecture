@@ -1,6 +1,6 @@
 # SYS-005: Close the classify-and-writeback loop — freeze the contract
 
-**Status:** Accepted (updated 2026-06-27 — Kafka replaced by FastAPI BackgroundTasks; updated 2026-07-05 — classifier call now retries transient failures per SYS-013)
+**Status:** Accepted — outbox delivery 2026-09-09; writeback contract unchanged
 **Date:** 2026-06-23
 **Deciders:** San Lee
 
@@ -23,8 +23,9 @@ HTTP seam between the classifier and `kb-agent`.
 The forces remain the same: the classifier's tags must not clobber a user's own tags on the
 note, and the writeback must be safe to re-run (idempotent). The delivery model changed from
 at-least-once Kafka to a best-effort in-process background task — simpler to operate, with
-the trade-off that a crashed worker loses the enrichment for that request (acceptable at
-this scale; revisit if reliability SLA tightens).
+the trade-off that a crashed worker used to lose the enrichment for that request.
+That delivery gap closed 2026-09-09: `notes-api/ADR-003` stores each job in SQLite
+in the same commit as the note. The frozen writeback contract below did not change.
 
 ## Decision
 
@@ -115,14 +116,14 @@ production before the record did, which is the failure SYS-018 was written to pr
   create a note → it gets classified and tagged automatically, asynchronously, without
   coupling note creation to the classifier's availability. `CLASSIFIER_URL` unset is a safe,
   zero-friction default for local dev.
-- **What it costs (the tradeoff accepted).** Best-effort delivery: if the `notes-api`
-  worker process crashes between the `201` response and task completion, the enrichment is
-  lost for that note. There is no durable queue or replay. Eventual consistency: a note's
-  machine tags appear a moment after creation.
-- **What we'll revisit.** If a reliability SLA emerges (e.g. "every note must be tagged"),
-  the upgrade path is a durable task queue (Celery + Redis, or an outbox pattern) in place
-  of BackgroundTasks — the writeback contract and the `PUT /notes/{id}/tags` endpoint are
-  unchanged either way.
+- **What it costs (the tradeoff accepted).** Eventual consistency: a note's
+  machine tags appear a moment after creation. The worker is still one process.
+  A long classifier outage leaves jobs queued until `CLASSIFIER_URL` is set
+  again. There is no separate replay tool.
+- **What we'll revisit.** Fan-out to more than one consumer, or a worker fleet
+  that SQLite cannot serve. The writeback contract and the `PUT /notes/{id}/tags`
+  endpoint stay unchanged. The outbox path shipped 2026-09-09
+  (`notes-api/ADR-003`).
 - **The writeback's next form.** Idempotency and the namespace-merge are currently the
   **caller's** job: the background task merges against the note's tags snapshot and `PUT`s the
   full set, which opens a lost-update window if a user edits tags between the task's read and its
