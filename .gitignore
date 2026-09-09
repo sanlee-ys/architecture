@@ -18,3 +18,6 @@ __pycache__/
 # (`-p no:cacheprovider` in checks.yml) so the decision-log lint's whole-repo sweep in
 # the following step does not walk a tool cache it does not own.
 .pytest_cache/
+
+# Local deploy key. Copy deploy/.env.example to deploy/.env; never commit the copy.
+deploy/.env
