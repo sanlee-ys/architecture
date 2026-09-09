@@ -97,7 +97,12 @@ def parse_merged_at(value: str) -> datetime:
     return datetime.fromisoformat(value.replace("Z", "+00:00"))
 
 
-def list_merged_prs(repo: str, start: date, end: date, run: GhRunner = run_gh) -> list[dict]:
+def list_merged_prs(
+    repo: str,
+    start: date,
+    end: date,
+    run: GhRunner | None = None,
+) -> list[dict]:
     """Return PRs in ``repo`` whose merge date is in ``[start, end]``.
 
     ``gh pr list --state merged`` returns the newest merged PRs. This function
@@ -108,11 +113,14 @@ def list_merged_prs(repo: str, start: date, end: date, run: GhRunner = run_gh) -
         repo: ``owner/name``.
         start: First date in the window (inclusive).
         end: Run day (inclusive).
-        run: ``gh`` runner. Tests pass a stub.
+        run: ``gh`` runner. Tests pass a stub. Default looks up ``run_gh``
+            at call time so a monkeypatch on the module name is visible.
 
     Returns:
         A list of PR dicts, newest first.
     """
+    if run is None:
+        run = run_gh
     raw = run(
         [
             "pr",
@@ -240,18 +248,21 @@ def write_status(out_dir: Path, today: date, text: str) -> Path:
 def harvest(
     today: date,
     out_dir: Path,
-    run: GhRunner = run_gh,
+    run: GhRunner | None = None,
 ) -> Path:
     """Harvest all four repos and write the weekly file.
 
     Args:
         today: The run day.
         out_dir: Destination directory.
-        run: ``gh`` runner. Tests pass a stub.
+        run: ``gh`` runner. Tests pass a stub. Default looks up ``run_gh``
+            at call time so a monkeypatch on the module name is visible.
 
     Returns:
         The path that was written.
     """
+    if run is None:
+        run = run_gh
     start = window_start(today)
     by_repo = {repo: list_merged_prs(repo, start, today, run=run) for repo in REPOS}
     text = render(today, start, by_repo)

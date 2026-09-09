@@ -153,11 +153,15 @@ def test_invalid_json_exits(tmp_path):
 
 
 def test_cli_writes_under_out_dir(tmp_path, monkeypatch):
+    """``main()`` must see a monkeypatch of ``run_gh``. A default argument
+    bound at import time would still call the real ``gh`` (CI caught that).
+    """
     stub = GhStub({repo: [] for repo in ws.REPOS})
     monkeypatch.setattr(ws, "run_gh", stub)
     rc = ws.main(["--date", "2026-09-09", "--out-dir", str(tmp_path)])
     assert rc == 0
     assert (tmp_path / "2026-09-09.md").is_file()
+    assert stub.calls, "main() still called the real gh; the stub was not used"
 
 
 def test_cli_rejects_bad_date(tmp_path):
