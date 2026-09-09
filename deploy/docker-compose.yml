@@ -1,0 +1,99 @@
+# Local compose for notes-api + classifier, with optional kb-agent.
+# Loopback only on the host (SYS-010). This is not a public deploy.
+#
+# From this directory:
+#   cp .env.example .env
+#   docker compose up --build
+# Optional agent:
+#   docker compose --profile agent up --build
+#
+# Build contexts are sibling clones. Classifier has a Dockerfile on main.
+# notes-api and kb-agent Dockerfiles may still land in those repos.
+
+name: local-system
+
+services:
+  classifier:
+    image: classifier:local
+    build:
+      context: ../defense-news-classifier
+    ports:
+      - "127.0.0.1:8080:8080"
+    environment:
+      PORT: "8080"
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/health')",
+        ]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 20s
+    restart: unless-stopped
+
+  notes-api:
+    image: notes-api:local
+    build:
+      context: ../notes-api
+    ports:
+      - "127.0.0.1:8081:8081"
+    environment:
+      HOST: "0.0.0.0"
+      PORT: "8081"
+      CLASSIFIER_URL: http://classifier:8080
+      DATABASE_URL: sqlite:////data/notes.db
+    volumes:
+      - notes-data:/data
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8081/health')",
+        ]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 20s
+    depends_on:
+      classifier:
+        condition: service_healthy
+    restart: unless-stopped
+
+  kb-agent:
+    profiles: ["agent"]
+    image: kb-agent:local
+    build:
+      context: ../kb-agent
+    ports:
+      - "127.0.0.1:7860:7860"
+    environment:
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      KB_ALLOWED_HOSTS: classifier,notes-api
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:7860/health')",
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 8
+      start_period: 40s
+    depends_on:
+      notes-api:
+        condition: service_healthy
+      classifier:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  notes-data:

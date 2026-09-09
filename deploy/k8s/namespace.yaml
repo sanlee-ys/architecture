@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: local-system
+  labels:
+    app.kubernetes.io/part-of: local-system
+    app.kubernetes.io/name: local-system

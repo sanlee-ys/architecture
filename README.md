@@ -75,6 +75,7 @@ which is which. It is *not* a ranking — a `Standard` can be more rigorously en
 | [SYS-020](decisions/SYS-020-when-a-repo-earns-a-tag.md) | Standard | A repo earns tags when it publishes a number or exposes a contract; every other repo is deliberately untagged | Accepted |
 | [SYS-021](decisions/SYS-021-agentic-ci-proves-itself-by-artifact.md) | Standard | An agentic CI job proves itself by its artifact, never by its exit code — grant tools, verify at adoption, enforce advisory | Accepted |
 | [SYS-022](decisions/SYS-022-org-graph-and-the-mechanization-split.md) | Standard | The fleet division of labor is this system's org graph; a graph-engineering claim must name which harness concerns are mechanized | Accepted — amended 2026-08-09 |
+| [SYS-023](decisions/SYS-023-otel-span-contracts.md) | Contract | Each service owns an OTel span-name contract; a test fails on drift | Accepted |
 
 ## Writing a new ADR
 

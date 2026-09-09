@@ -24,7 +24,7 @@ keep the classical skill intact on purpose, and use it as the ruler.
 | **Context engineering** | retrieval, chunk/result caps, grounding | `kb-agent` RAG; `SYS-003` rule 4 | ✅ in use (unnamed) |
 | **Agents & orchestration** | tool design, the tool-use loop, error recovery, handoff between agents | `kb-agent` loop; `SYS-003` tool-layer contract; the classifier's autonomy ladder L1–L4, including a critic that hands a label *backward* for reclassification (`classifier/ADR-018`, `ADR-020`) | ✅ shipped; both top rungs measured negative and declined |
 | **Baselines & build-vs-buy** | fit the classical model you are *not* going to ship, to price the one you are; paired significance tests instead of eyeballed deltas | classifier bake-off — TF-IDF + logistic regression trained and scored against the same human gold set as the LLM (`classifier/ADR-017`) | ✅ measured once, not yet a practice |
-| **Observability, cost & reliability** | tracing, token/latency/drift, model-tier | OTel tracing across `kb-agent`, classifier `/classify`, `notes-api` (opt-in); `SYS-002` | ✅ tracing shipped |
+| **Observability, cost & reliability** | tracing, token/latency/drift, model-tier | OTel tracing across `kb-agent`, classifier `/classify`, `notes-api` (opt-in); `SYS-002`; span-name drift is `SYS-023` | ✅ tracing shipped; span contract recorded |
 | **Security, safety & governance** | prompt injection, tool-exfil surface, output hardening | threat model of the `kb-agent` tool seam as a regulated deploy (`SYS-016`); `SYS-010` posture | 📝 threat model documented |
 
 ## What's next — the learning sequence
@@ -33,7 +33,7 @@ Priority order. It rhymes with the program roadmap and adds the two skills the s
 but never named:
 
 1. **Evals** (keystone, partly shipped) — the classifier has this: a 54-snippet hand-labelled gold set, a judge validated against it, and threshold gates that fail a PR (`classifier/ADR-007`). `SYS-017` is settled — adopted 2026-08-02 with a tier ladder that places each repo honestly. What remains is the work it makes chippable: extending the pattern to `kb-agent`'s retrieval, which is blocked on making its eval corpus reconstructible in CI before any floor can be set.
-2. **Observability / OTel** *(shipped)* — OTel tracing across all three services (`kb-agent` loop, classifier `/classify`, `notes-api` enrichment seam), opt-in per service with GenAI/HTTP semconv attributes. Drift detection over the traces is the remaining refinement. You can't improve what you can't see.
+2. **Observability / OTel** *(shipped)* — OTel tracing across all three services (`kb-agent` loop, classifier `/classify`, `notes-api` enrichment seam), opt-in per service with GenAI/HTTP semconv attributes. `SYS-023` freezes span names per service; the `contracts/otel-spans.json` files land in the service repos. You can't improve what you can't see.
 3. **Context-engineering depth** — past naive RAG: retrieval quality, reranking, memory.
 4. **AI security** *(threat model documented)* — the agent tool seam is modeled as a regulated deployment (`SYS-016`); building its tenancy + audit controls is the next step a real deployment would take.
 5. **MCP / interop** *(stretch)* — candidate future ADR: MCP-ify the `SYS-003` HTTP seam. A learning target, not current practice.

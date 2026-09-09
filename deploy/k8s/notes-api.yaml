@@ -1,0 +1,77 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: notes-api
+  namespace: local-system
+  labels:
+    app.kubernetes.io/name: notes-api
+    app.kubernetes.io/part-of: local-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: notes-api
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: notes-api
+        app.kubernetes.io/part-of: local-system
+    spec:
+      containers:
+        - name: notes-api
+          image: notes-api:local
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8081
+          env:
+            - name: HOST
+              value: "0.0.0.0"
+            - name: PORT
+              value: "8081"
+            - name: CLASSIFIER_URL
+              value: http://classifier:8080
+            - name: DATABASE_URL
+              value: sqlite:////data/notes.db
+          volumeMounts:
+            - name: notes-data
+              mountPath: /data
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+      volumes:
+        - name: notes-data
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: notes-api
+  namespace: local-system
+  labels:
+    app.kubernetes.io/name: notes-api
+    app.kubernetes.io/part-of: local-system
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: notes-api
+  ports:
+    - name: http
+      port: 8081
+      targetPort: http
